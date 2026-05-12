@@ -425,17 +425,12 @@ def make_geo_anomaly_map(
     frame: pd.DataFrame,
     county_reference: pd.DataFrame,
     all_47_counties: bool = True,
-    map_height: int = 520,
+    map_height: int = 600,
     kenya_adm1_geojson: dict | None = None,
     kenya_adm0_geojson: dict | None = None,
     raw_market_frame: pd.DataFrame | None = None,
 ) -> go.Figure:
-    """Layered Kenya map: county choropleth (risk) + optional national border + market bubbles.
-
-    Counties are colored by anomaly rate (single colorbar). Markets use **size ∝ risk** and
-    a fixed dark fill (no second color scale). Add ``geoBoundaries-KEN-ADM0.geojson`` for a
-    crisp Kenya outline on top of counties.
-    """
+    """Enhanced interactive map using Mapbox for a Google Maps-like experience."""
     from . import kenya_counties as kc
 
     county_summary = (
@@ -447,318 +442,95 @@ def make_geo_anomaly_map(
             avg_score=("risk_score", "mean"),
         )
     )
+    
     if all_47_counties:
-        centroids = kc.get_kenya_county_centroids()
         names_47 = kc.get_all_47_county_names()
         county_summary["COUNTY_CANON"] = county_summary["COUNTY"].map(
             lambda x: kc.data_county_to_canonical(str(x)) or str(x)
         )
-        summary_47 = (
-            county_summary.groupby("COUNTY_CANON", as_index=False)
-            .agg(
-                anomaly_rate=("anomaly_rate", "mean"),
-                anomaly_count=("anomaly_count", "sum"),
-                avg_price=("avg_price", "mean"),
-                avg_score=("avg_score", "mean"),
-            )
-        )
+        summary_47 = county_summary.groupby("COUNTY_CANON", as_index=False).mean()
+        
         geo_rows = []
         for name in names_47:
-            lat, lon = centroids.get(name, (0.0, 37.9))
-            row = {"COUNTY": name, "latitude": lat, "longitude": lon}
+            row = {"COUNTY": name}
             match = summary_47[summary_47["COUNTY_CANON"] == name]
             if not match.empty:
                 m = match.iloc[0]
                 row["anomaly_rate"] = float(m["anomaly_rate"])
-                row["anomaly_count"] = int(m["anomaly_count"])
-                row["avg_price"] = float(m["avg_price"])
                 row["avg_score"] = float(m["avg_score"])
             else:
                 row["anomaly_rate"] = 0.0
-                row["anomaly_count"] = 0
-                row["avg_price"] = 0.0
                 row["avg_score"] = 0.0
             geo_rows.append(row)
         map_df = pd.DataFrame(geo_rows)
     else:
-        map_df = county_reference.merge(county_summary, on="COUNTY", how="inner").fillna(0)
+        map_df = county_summary.copy()
 
     markets_df = _market_points_for_map(frame, raw_market_frame)
 
-    _geo_kenya_bounds = dict(
-        visible=False,
-        showcountries=True,
-        countrycolor="#3d5c45",
-        showcoastlines=True,
-        coastlinecolor="#2d4a38",
-        showland=True,
-        landcolor="rgba(232, 240, 228, 0.5)",
-        showocean=True,
-        oceancolor="rgba(210, 225, 235, 0.45)",
-        lataxis=dict(range=[-5.0, 5.2]),
-        lonaxis=dict(range=[33.8, 42.0]),
-        projection_type="equirectangular",
-        showframe=False,
-        bgcolor="rgba(0,0,0,0)",
-    )
+    fig = go.Figure()
 
-    def _guess_adm1_name_key(geojson: dict, county_names: list[str]) -> str:
-        """Pick the GeoJSON property key that best matches county names."""
-        features = geojson.get("features") if isinstance(geojson, dict) else None
-        if not features:
-            return "shapeName"
-        props = (features[0] or {}).get("properties") or {}
-        keys = list(props.keys())
-        # Common keys across providers (geoBoundaries, HDX, GADM, etc.)
-        preferred = [
-            "shapeName",
-            "ADM1_EN",
-            "ADM1_NAME",
-            "NAME_1",
-            "name",
-            "Name",
-            "county",
-            "County",
-            "COUNTY",
-        ]
-        probe = [k for k in preferred if k in keys] + keys
-        canon = {str(n).strip().lower() for n in county_names if n}
-        best_key = "shapeName"
-        best_hits = -1
-        for k in probe:
-            try:
-                vals = []
-                for f in features[:200]:
-                    p = (f or {}).get("properties") or {}
-                    v = p.get(k)
-                    if v is not None:
-                        vals.append(str(v).strip().lower())
-                hits = len(set(vals) & canon)
-            except Exception:
-                continue
-            if hits > best_hits:
-                best_hits = hits
-                best_key = k
-            if hits >= max(5, int(len(canon) * 0.4)):
-                break
-        return best_key
+    # Add Choropleth Layer
+    if kenya_adm1_geojson:
+        name_key = "shapeName" # Common default for geoBoundaries
+        # Try to find the best key if not shapeName
+        if "features" in kenya_adm1_geojson and kenya_adm1_geojson["features"]:
+            props = kenya_adm1_geojson["features"][0]["properties"]
+            for k in ["shapeName", "ADM1_EN", "NAME_1", "name", "COUNTY"]:
+                if k in props:
+                    name_key = k
+                    break
 
-    def _adm0_border_latlon(adm0: dict) -> tuple[list[float], list[float]]:
-        feats = adm0.get("features") or []
-        if not feats:
-            return [], []
-        geom = (feats[0] or {}).get("geometry") or {}
-        typ = geom.get("type")
-        coords = geom.get("coordinates")
-        ring: list
-        if typ == "Polygon" and coords:
-            ring = coords[0]
-        elif typ == "MultiPolygon" and coords:
-            ring = max((p[0] for p in coords if p), key=len, default=[])
-        else:
-            return [], []
-        if not ring:
-            return [], []
-        lon = [float(p[0]) for p in ring]
-        lat = [float(p[1]) for p in ring]
-        if lon and (lon[0] != lon[-1] or lat[0] != lat[-1]):
-            lon.append(lon[0])
-            lat.append(lat[0])
-        return lat, lon
-
-    if kenya_adm1_geojson is not None and isinstance(kenya_adm1_geojson, dict):
-        choro_df = map_df.copy()
-        choro_df["COUNTY"] = choro_df["COUNTY"].astype(str)
-        name_key = _guess_adm1_name_key(kenya_adm1_geojson, choro_df["COUNTY"].tolist())
-        fid = f"properties.{name_key}"
-
-        hover = (
-            "<b>%{location}</b><br>"
-            "County anomaly rate: %{z:.3f}<br>"
-            "Avg risk score: %{customdata[0]:.3f}<br>"
-            "Records: %{customdata[1]:,}<extra></extra>"
-        )
-        figure = go.Figure()
-        figure.add_trace(
-            go.Choropleth(
+        fig.add_trace(
+            go.Choroplethmapbox(
                 geojson=kenya_adm1_geojson,
-                locations=choro_df["COUNTY"],
-                z=choro_df["anomaly_rate"],
-                featureidkey=fid,
+                locations=map_df["COUNTY"],
+                z=map_df["anomaly_rate"],
+                featureidkey=f"properties.{name_key}",
                 colorscale=[
-                    [0.0, "#E8F5E9"],
-                    [0.25, "#FFF9C4"],
-                    [0.55, "#FF9800"],
-                    [1.0, "#B71C1C"],
+                    [0.0, "#ECFDF5"], # Stable (emerald-50)
+                    [0.2, "#D1FAE5"],
+                    [0.5, "#FCD34D"], # Moderate (amber-300)
+                    [1.0, "#EF4444"], # High (red-500)
                 ],
-                zmin=0.0,
-                zmax=max(float(choro_df["anomaly_rate"].max()), 0.01),
-                marker_line_color="#FFFFFF",
-                marker_line_width=0.65,
-                colorbar=dict(
-                    title=dict(text="County anomaly rate", side="right"),
-                    len=0.72,
-                    y=0.5,
-                    x=1.02,
-                    tickfont=dict(size=12),
-                    outlinewidth=0,
-                ),
-                customdata=np.column_stack(
-                    [
-                        choro_df["avg_score"].astype(float),
-                        choro_df["anomaly_count"].astype(int),
-                    ]
-                ),
-                name="Counties",
-                hovertemplate=hover,
+                zmin=0,
+                zmax=max(map_df["anomaly_rate"].max(), 0.1),
+                marker_opacity=0.6,
+                marker_line_width=1,
+                marker_line_color="white",
+                name="County Risk",
+                hovertemplate="<b>%{location}</b><br>Anomaly Rate: %{z:.2%}<extra></extra>"
             )
         )
 
-        if not markets_df.empty:
-            mdf = markets_df.copy()
-            dup = mdf.duplicated(subset=["latitude", "longitude"], keep=False)
-            if dup.any():
-                rng = np.random.default_rng(42)
-                n = int(dup.sum())
-                mdf.loc[dup, "latitude"] = mdf.loc[dup, "latitude"].astype(float) + rng.normal(
-                    0, 0.032, n
-                )
-                mdf.loc[dup, "longitude"] = mdf.loc[dup, "longitude"].astype(float) + rng.normal(
-                    0, 0.032, n
-                )
-            risk_sz = np.clip(mdf["risk_score"].astype(float).to_numpy(), 0.08, 1.0)
-            mx = float(np.nanmax(risk_sz)) if len(risk_sz) else 0.15
-            sizeref = max(2.0 * mx / (24.0**2), 1e-6)
-            figure.add_trace(
-                go.Scattergeo(
-                    lat=mdf["latitude"],
-                    lon=mdf["longitude"],
-                    mode="markers",
-                    marker=dict(
-                        size=risk_sz,
-                        sizemode="area",
-                        sizeref=sizeref,
-                        sizemin=6,
-                        color="rgba(22, 38, 82, 0.78)",
-                        line=dict(width=1.25, color="rgba(255,255,255,0.95)"),
-                    ),
-                    customdata=np.column_stack(
-                        [
-                            mdf["market"].astype(str),
-                            mdf["COUNTY"].astype(str),
-                            mdf["risk_score"].astype(float),
-                            mdf["pred_anomaly"].astype(float),
-                        ]
-                    ),
-                    hovertemplate=(
-                        "<b>%{customdata[0]}</b> · %{customdata[1]}<br>"
-                        "Risk score (marker size): %{customdata[2]:.3f}<br>"
-                        "County mean anomaly: %{customdata[3]:.3f}<extra></extra>"
-                    ),
-                    name="Markets (size ~ risk)",
-                )
-            )
-
-        if kenya_adm0_geojson and isinstance(kenya_adm0_geojson, dict):
-            blat, blon = _adm0_border_latlon(kenya_adm0_geojson)
-            if blat and blon:
-                figure.add_trace(
-                    go.Scattergeo(
-                        lat=blat,
-                        lon=blon,
-                        mode="lines",
-                        line=dict(color="#041208", width=3.5),
-                        hoverinfo="skip",
-                        name="Kenya border",
-                    )
-                )
-
-        figure.update_geos(
-            projection_type="mercator",
-            fitbounds="locations",
-            visible=True,
-            showocean=True,
-            oceancolor="#B8CFE0",
-            showland=True,
-            landcolor="#DDD8CF",
-            showlakes=True,
-            lakecolor="#B8CFE0",
-            showcountries=False,
-            showcoastlines=False,
-            resolution=50,
-            bgcolor="#B8CFE0",
-        )
-        figure.update_layout(
-            title=dict(text="Kenya county & market risk map", font=dict(size=18)),
-            margin=dict(l=8, r=96, t=48, b=8),
-            height=map_height,
-            paper_bgcolor="#E8EEF4",
-            legend=dict(
-                x=0.02,
-                y=0.98,
-                xanchor="left",
-                yanchor="top",
-                bgcolor="rgba(255,255,255,0.9)",
-                font=dict(size=11),
-            ),
-        )
-        if markets_df.empty:
-            figure.add_annotation(
-                text="No market coordinates in scope — check WFP lat/lon and filters.",
-                xref="paper",
-                yref="paper",
-                x=0.5,
-                y=0.02,
-                showarrow=False,
-                font=dict(size=11, color="#3d5238"),
-            )
-        return figure
-
-    figure = px.scatter_geo(
-        map_df,
-        lat="latitude",
-        lon="longitude",
-        color="anomaly_rate",
-        size=map_df["anomaly_count"].clip(lower=0).replace(0, 10),
-        hover_name="COUNTY",
-        hover_data={
-            "avg_price": ":.2f",
-            "avg_score": ":.3f",
-            "anomaly_count": ":,",
-            "latitude": False,
-            "longitude": False,
-        },
-        color_continuous_scale=["#E8F5E9", "#F9A825", "#C62828"],
-        title="Kenya county risk (centroids) — add ADM1 GeoJSON for full county map",
-    )
-    figure.update_geos(**_geo_kenya_bounds)
+    # Add Market Scatter Layer
     if not markets_df.empty:
-        sizes = np.clip(markets_df["records"].astype(float) * 1.8, 7.0, 22.0)
-        figure.add_trace(
-            go.Scattergeo(
+        fig.add_trace(
+            go.Scattermapbox(
                 lat=markets_df["latitude"],
                 lon=markets_df["longitude"],
                 mode="markers",
-                marker=dict(
-                    size=sizes,
-                    color=markets_df["risk_score"],
-                    colorscale=[[0, "#1B5E20"], [0.4, "#F9A825"], [1, "#B71C1C"]],
-                    cmin=0.0,
-                    cmax=1.0,
-                    line=dict(width=1.5, color="#222"),
-                    colorbar=dict(title="Market risk", y=0.3, len=0.4),
+                marker=go.scattermapbox.Marker(
+                    size=markets_df["risk_score"] * 25 + 5,
+                    color="#111827",
+                    opacity=0.8,
                 ),
-                text=markets_df["market"].astype(str) + " · " + markets_df["COUNTY"].astype(str),
-                hovertemplate="<b>%{text}</b><br>Risk: %{marker.color:.3f}<extra></extra>",
-                name="Markets",
+                text=markets_df["market"],
+                hovertemplate="<b>Market: %{text}</b><br>Risk Score: %{marker.size}<extra></extra>",
+                name="Market Hotspots"
             )
         )
-    figure.update_layout(
-        margin=dict(l=10, r=10, t=50, b=10),
+
+    fig.update_layout(
+        mapbox_style="carto-positron", # Professional clean Google-like aesthetic
+        mapbox_zoom=5.2,
+        mapbox_center={"lat": 0.0236, "lon": 37.9062}, # Center of Kenya
+        margin={"r":0,"t":0,"l":0,"b":0},
         height=map_height,
-        geo=dict(bgcolor="rgba(255,255,255,0)"),
+        showlegend=False
     )
-    return figure
+
+    return fig
 
 
 def make_commodity_heatmap(frame: pd.DataFrame) -> go.Figure:
