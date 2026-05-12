@@ -142,20 +142,28 @@ def apply_custom_theme() -> None:
             background: {AGRI['card_bg']} !important;
             border: 1px solid {AGRI['border_card']} !important;
             border-radius: 16px !important;
-            padding: 1.5rem !important;
+            padding: 1.25rem 1.5rem !important;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+            margin-bottom: 0.5rem !important;
         }}
 
         [data-testid="stMetricLabel"] p {{
             color: {AGRI['text_secondary']} !important;
-            font-size: 0.85rem !important;
+            font-size: 0.8rem !important;
             text-transform: uppercase !important;
             letter-spacing: 0.05em !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.4 !important;
         }}
 
         [data-testid="stMetricValue"] div {{
             color: #FFFFFF !important;
             font-family: 'Outfit', sans-serif !important;
+            font-size: 1.75rem !important;
+            line-height: 1.2 !important;
+            margin-top: 4px !important;
         }}
 
         /* Charts Container */

@@ -5,6 +5,9 @@ import math
 import pandas as pd
 import streamlit as st
 
+# Increase Pandas Styler limit for safety
+pd.set_option("styler.render.max_elements", 1000000)
+
 from src.app_state import APP_END_DATE, APP_START_DATE, get_app_context
 from src.data_loader import load_optional_kenya_adm0_geojson, load_optional_kenya_adm1_geojson
 from src.streamlit_plotly import plotly_chart_interactive
@@ -364,6 +367,7 @@ def _source_style(value: str) -> str:
     return ""
 
 alerts = make_alerts_table(filtered_df, include_elevated=_watch)
+alerts = alerts.head(500) # Limit for performance and to avoid Styler crash
 st.caption(f"**{len(alerts):,}** rows · sorted by commodity — scroll inside the table.")
 if alerts.empty:
     st.info("No alert rows for current filters. Widen the time range or enable the watchlist above.")
