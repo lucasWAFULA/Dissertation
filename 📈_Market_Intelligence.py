@@ -163,6 +163,7 @@ with st.sidebar:
         from scripts.live_ingest import main as run_ingest
         with st.spinner("Synchronizing with WFP VAM..."):
             run_ingest()
+            st.cache_data.clear() # Clear cache to load new DB records
             st.rerun()
     
     st.divider()
