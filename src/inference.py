@@ -112,6 +112,9 @@ def _predict_proba(model: Any, X: pd.DataFrame | np.ndarray) -> np.ndarray:
 
 
 def score_dataset(frame: pd.DataFrame, bundle: ArtifactBundle) -> pd.DataFrame:
+    if frame.empty:
+        return frame.copy()
+        
     scored = frame.copy()
     X = align_feature_matrix(scored, bundle.feature_names)
 

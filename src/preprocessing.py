@@ -130,11 +130,17 @@ def build_monthly_price_series(wfp_clean: pd.DataFrame) -> pd.DataFrame:
     wfp_pivot = wfp_pivot.reindex(columns=full_months)
 
     wfp_interp = wfp_pivot.T.interpolate(method="linear", limit=3).T
-    filled = pd.DataFrame(
-        KNNImputer(n_neighbors=5).fit_transform(wfp_interp),
-        index=wfp_interp.index,
-        columns=wfp_interp.columns,
-    )
+    n_samples = len(wfp_interp)
+    n_neighbors = min(5, n_samples) if n_samples > 0 else 5
+    
+    if n_samples > 0:
+        filled = pd.DataFrame(
+            KNNImputer(n_neighbors=n_neighbors).fit_transform(wfp_interp),
+            index=wfp_interp.index,
+            columns=wfp_interp.columns,
+        )
+    else:
+        filled = wfp_interp
     filled = filled.ffill(axis=1).bfill(axis=1)
 
     wfp_long = filled.stack().reset_index()
