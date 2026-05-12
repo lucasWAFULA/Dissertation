@@ -1,0 +1,16 @@
+name
+price_real
+growth_rate
+rolling_vol
+NDVI_anomaly
+rain_mm
+SPI3
+SPI6
+price_lag1
+price_lag2
+price_lag3
+price_roll3
+NDVI_lag1
+SPI3_lag1
+fpma_maize
+inflation_pct

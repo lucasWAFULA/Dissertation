@@ -1,0 +1,6 @@
+model,optimal_threshold
+Linear SVM,0.964788319653672
+XGBoost,0.9977259039878845
+Logistic Regression,0.9882509762090407
+LightGBM,0.9979284306024835
+Decision Tree (entropy),0.9913035491423067
