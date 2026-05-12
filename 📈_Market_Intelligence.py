@@ -86,13 +86,6 @@ with header_cols[0]:
 
 with header_cols[1]:
     st.markdown("**Commodity**")
-    selected_commodities = st.multiselect(
-        "Select commodities",
-        options=commodities,
-        default=commodities[: min(5, len(commodities))],
-        key="commodity_selector",
-        label_visibility="collapsed"
-    )
     # Quick Filters for Commodities
     q_comm = st.columns(2)
     with q_comm[0]:
@@ -104,15 +97,16 @@ with header_cols[1]:
             st.session_state["commodity_selector"] = ["Tomatoes", "Onions", "Cabbage"]
             st.rerun()
 
-with header_cols[2]:
-    st.markdown("**County**")
-    selected_counties = st.multiselect(
-        "Select counties",
-        options=counties, 
-        default=[],
-        key="county_selector",
+    selected_commodities = st.multiselect(
+        "Select commodities",
+        options=commodities,
+        default=commodities[: min(5, len(commodities))],
+        key="commodity_selector",
         label_visibility="collapsed"
     )
+
+with header_cols[2]:
+    st.markdown("**County**")
     # Quick Filters for Counties
     q_county = st.columns(2)
     with q_county[0]:
@@ -123,6 +117,14 @@ with header_cols[2]:
         if st.button("🌊 Coastal", use_container_width=True):
             st.session_state["county_selector"] = ["Mombasa", "Kilifi", "Kwale"]
             st.rerun()
+
+    selected_counties = st.multiselect(
+        "Select counties",
+        options=counties, 
+        default=[],
+        key="county_selector",
+        label_visibility="collapsed"
+    )
 
 with header_cols[3]:
     st.markdown("**Intelligence Model**")
