@@ -150,10 +150,20 @@ with st.sidebar:
     with health_cols[0]:
         st.success("● Connected")
     with health_cols[1]:
-        last_date = combined_df[combined_df['record_type'] == 'live']['date'].max()
-        last_str = last_date.strftime("%d %b") if pd.notnull(last_date) else "N/A"
-        st.info(f"📅 {last_str}")
+        live_data = combined_df[combined_df['record_type'] == 'live']
+        if not live_data.empty:
+            last_date = live_data['date'].max()
+            last_str = last_date.strftime("%d %b")
+            st.info(f"📅 {last_str}")
+        else:
+            st.warning("📅 Waiting")
     st.caption("Feed Source: WFP/VAM Real-time")
+    
+    if st.button("🔄 Force Live Sync", use_container_width=True):
+        from scripts.live_ingest import main as run_ingest
+        with st.spinner("Synchronizing with WFP VAM..."):
+            run_ingest()
+            st.rerun()
     
     st.divider()
     st.subheader("🚨 Detection Threshold")
