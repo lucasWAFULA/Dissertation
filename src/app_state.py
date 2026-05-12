@@ -144,12 +144,13 @@ def build_future_outlook_dataset() -> pd.DataFrame:
     return future_df
 
 
-from .database import load_prices_from_db
+from .database import init_db, load_prices_from_db
 
 @st.cache_data(show_spinner=False)
 def load_live_data_from_db() -> pd.DataFrame:
     """Load live ingestion records from the SQL database."""
     try:
+        init_db()  # Ensure tables exist
         live_df = load_prices_from_db(limit=5000)
         if not live_df.empty:
             live_df["record_type"] = "live"
