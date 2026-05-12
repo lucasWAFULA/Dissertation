@@ -448,7 +448,13 @@ def make_geo_anomaly_map(
         county_summary["COUNTY_CANON"] = county_summary["COUNTY"].map(
             lambda x: kc.data_county_to_canonical(str(x)) or str(x)
         )
-        summary_47 = county_summary.groupby("COUNTY_CANON", as_index=False).mean()
+        summary_47 = (
+            county_summary.groupby("COUNTY_CANON", as_index=False)
+            .agg(
+                anomaly_rate=("anomaly_rate", "mean"),
+                avg_score=("avg_score", "mean"),
+            )
+        )
         
         geo_rows = []
         for name in names_47:
