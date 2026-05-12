@@ -8,43 +8,32 @@ import plotly.io as pio
 
 
 def _register_readable_plotly_template() -> None:
-    """High-contrast figures for the main panel (titles, axes, plot area)."""
+    """High-contrast figures for the professional intelligence panel."""
     try:
         spec = pio.templates["plotly_white"].to_plotly_json()
         L = spec.setdefault("layout", {})
-        L["paper_bgcolor"] = "#FDFEFB"
-        L["plot_bgcolor"] = "#F2F7EE"
-        L["font"] = {"size": 15, "color": "#081008", "family": "DM Sans, sans-serif"}
+        L["paper_bgcolor"] = "rgba(0,0,0,0)"
+        L["plot_bgcolor"] = "rgba(0,0,0,0)"
+        L["font"] = {"size": 13, "color": "#111827", "family": "Inter, sans-serif"}
         L.setdefault("title", {})["font"] = {
-            "size": 22,
-            "color": "#020802",
-            "family": "DM Sans, sans-serif",
+            "size": 18,
+            "color": "#111827",
+            "family": "Inter, sans-serif",
         }
         xa = L.setdefault("xaxis", {})
-        xa["tickfont"] = {"size": 14, "color": "#0a180a"}
-        xa["title"] = {"font": {"size": 16, "color": "#020802"}}
-        xa.setdefault("gridcolor", "#9EB592")
-        xa.setdefault("gridwidth", 1.2)
-        xa.setdefault("linecolor", "#2d4a28")
-        xa.setdefault("linewidth", 1.5)
-        xa.setdefault("tickwidth", 1)
+        xa["tickfont"] = {"size": 11, "color": "#4B5563"}
+        xa["title"] = {"font": {"size": 12, "color": "#111827"}}
+        xa.setdefault("gridcolor", "#F3F4F6")
+        xa.setdefault("linecolor", "#E5E7EB")
         ya = L.setdefault("yaxis", {})
-        ya["tickfont"] = {"size": 14, "color": "#0a180a"}
-        ya["title"] = {"font": {"size": 16, "color": "#020802"}}
-        ya.setdefault("gridcolor", "#9EB592")
-        ya.setdefault("gridwidth", 1.2)
-        ya.setdefault("linecolor", "#2d4a28")
-        ya.setdefault("linewidth", 1.5)
-        ya.setdefault("tickwidth", 1)
-        L.setdefault("legend", {})["font"] = {"size": 14, "color": "#0a140a"}
-        L.setdefault("legend", {})["bgcolor"] = "rgba(253,254,251,0.92)"
-        L.setdefault("legend", {})["bordercolor"] = "#5A7D52"
-        L.setdefault("legend", {})["borderwidth"] = 1
-        cb = L.setdefault("coloraxis", {}).setdefault("colorbar", {})
-        cb["tickfont"] = {"size": 13, "color": "#0a140a"}
-        cb.setdefault("title", {})["font"] = {"size": 14, "color": "#020802"}
-        pio.templates["agri_contrast"] = go.layout.Template(spec)
-        pio.templates.default = "agri_contrast"
+        ya["tickfont"] = {"size": 11, "color": "#4B5563"}
+        ya["title"] = {"font": {"size": 12, "color": "#111827"}}
+        ya.setdefault("gridcolor", "#F3F4F6")
+        ya.setdefault("linecolor", "#E5E7EB")
+        L.setdefault("legend", {})["font"] = {"size": 11, "color": "#4B5563"}
+        L.setdefault("legend", {})["bgcolor"] = "rgba(255,255,255,0.8)"
+        pio.templates["intel_theme"] = go.layout.Template(spec)
+        pio.templates.default = "intel_theme"
     except Exception:
         pass
 
@@ -52,18 +41,18 @@ def _register_readable_plotly_template() -> None:
 _register_readable_plotly_template()
 
 SEVERITY_ORDER = ["Low", "Medium", "High"]
-# Standard alert colors for food security / early warning dashboards
+# Professional alert colors
 SEVERITY_COLORS = {
-    "Low": "#2E7D32",   # green – normal fluctuation
-    "Medium": "#F9A825", # amber – watch
-    "High": "#C62828",   # red – critical
+    "Low": "#10B981",    # emerald
+    "Medium": "#F59E0B", # amber
+    "High": "#EF4444",   # red
 }
-# Shared agriculture palette for charts
-CHART_ACCENT = "#3D6B35"
-CHART_GOLD = "#B8860B"
-CHART_ANOMALY = "#A63D2E"
-CHART_FORECAST_BAND = "#E8EDE4"
-CHART_GRID = "#E0E8DC"
+# Shared professional palette for charts
+CHART_ACCENT = "#10B981"
+CHART_GOLD = "#F59E0B"
+CHART_ANOMALY = "#EF4444"
+CHART_FORECAST_BAND = "#F9FAFB"
+CHART_GRID = "#F3F4F6"
 
 
 def enrich_dashboard_frame(frame: pd.DataFrame) -> pd.DataFrame:

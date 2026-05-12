@@ -7,54 +7,54 @@ import streamlit as st
 
 from src.config import MAIN_PANEL_BACKGROUND_IMAGE
 
-# Agriculture-oriented palette: sage, earth, harvest gold, forest green, terracotta
+# Professional Intelligence/Fintech palette
 AGRI = {
-    "bg_main": "#EEF2E8",        # light sage
-    "bg_sidebar": "#E2EAD9",     # (fallback)
-    "bg_control_panel": "#E5DFD4",
-    "bg_control_panel_end": "#DDD6C8",
-    "border_sidebar": "#B8A99A",
-    "border_card": "#C5D4BC",
-    "text_primary": "#2C3318",
-    "text_secondary": "#4A5D44",
-    "accent_primary": "#3D6B35",
-    "accent_gold": "#8B6914",
-    "low": "#3D7C47",
-    "medium": "#B8860B",
-    "high": "#A63D2E",
+    "bg_main": "#F7F8FA",        # light grey background
+    "bg_sidebar": "#111827",     # deep charcoal
+    "bg_control_panel": "#1F2937",
+    "bg_control_panel_end": "#111827",
+    "border_sidebar": "#374151",
+    "border_card": "#E5E7EB",
+    "text_primary": "#111827",
+    "text_secondary": "#4B5563",
+    "accent_primary": "#10B981", # emerald accent
+    "accent_gold": "#F59E0B",
+    "low": "#10B981",
+    "medium": "#F59E0B",
+    "high": "#EF4444",
     "card_bg": "#FFFFFF",
-    "tag_bg": "#E8F0E4",
-    "tag_text": "#2D5A27",
-    "model_badge_bg": "#E3EDE0",
-    "model_badge_text": "#2D5A27",
-    "chart_grid": "#E0E8DC",
-    "forecast_band": "#E8EDE4",
+    "tag_bg": "#F3F4F6",
+    "tag_text": "#1F2937",
+    "model_badge_bg": "#ECFDF5",
+    "model_badge_text": "#065F46",
+    "chart_grid": "#F3F4F6",
+    "forecast_band": "#F9FAFB",
 }
 
-# Dark green control panel (sidebar): high contrast, dense type
+# Sidebar/Control Panel (CP) styling
 CP = {
-    "bg_a": "#07180f",
-    "bg_b": "#0f2918",
-    "bg_c": "#143d24",
-    "border": "#3d9f5c",
-    "border_soft": "rgba(120,200,140,0.35)",
-    "text": "#F2FFF2",
-    "text_label": "#E0F8E4",
-    "text_muted": "#9FD4A8",
-    "text_dim": "#7CB892",
-    "input_bg": "#FAFFFA",
-    "input_text": "#081208",
-    "input_border": "#4A9F5C",
-    "btn_from": "#E8FF8A",
-    "btn_to": "#B8E85A",
-    "btn_text": "#031005",
-    "code_bg": "rgba(0,24,12,0.65)",
-    "code_text": "#E8FFD8",
-    # Multipage nav (visible on dark green + on active pill)
-    "nav_rb_light": "#FFAD9E",
-    "nav_rb_hover": "#FFD4CC",
-    "nav_rb_active": "#6E1810",
-    "nav_rb_border": "rgba(220, 100, 85, 0.45)",
+    "bg_a": "#0F172A",
+    "bg_b": "#1E293B",
+    "bg_c": "#111827",
+    "border": "#334155",
+    "border_soft": "rgba(148, 163, 184, 0.1)",
+    "text": "#F8FAFC",
+    "text_label": "#94A3B8",
+    "text_muted": "#64748B",
+    "text_dim": "#475569",
+    "input_bg": "#1E293B",
+    "input_text": "#F8FAFC",
+    "input_border": "#334155",
+    "btn_from": "#10B981",
+    "btn_to": "#059669",
+    "btn_text": "#FFFFFF",
+    "code_bg": "rgba(15, 23, 42, 0.8)",
+    "code_text": "#34D399",
+    # Multipage nav
+    "nav_rb_light": "#94A3B8",
+    "nav_rb_hover": "#F8FAFC",
+    "nav_rb_active": "#FFFFFF",
+    "nav_rb_border": "rgba(16, 185, 129, 0.4)",
 }
 
 
@@ -107,538 +107,200 @@ def apply_custom_theme() -> None:
     app_bg = (
         "transparent"
         if main_bg
-        else f"linear-gradient(180deg, {AGRI['bg_main']} 0%, #E6EDE0 100%)"
+        else AGRI['bg_main']
     )
     st.markdown(
         f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         .stApp {{
             background: {app_bg};
             color: {AGRI["text_primary"]};
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
         }}
         {main_bg}
 
-        /* ——— Right panel: readable surface over background image ——— */
+        /* ——— Right panel surface ——— */
         [data-testid="stMain"] .block-container,
         section.main .block-container {{
-            background: rgba(252, 254, 249, 0.94) !important;
-            backdrop-filter: blur(16px) saturate(1.08);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.98) !important;
-            box-shadow:
-                0 8px 48px rgba(12, 28, 14, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-            border-radius: 6px 6px 18px 18px;
-            padding-top: 1.35rem !important;
-            padding-bottom: 2.25rem !important;
-            padding-left: 1.15rem !important;
-            padding-right: 1.15rem !important;
-        }}
-
-        .block-container {{
-            padding-top: 1.25rem;
-            padding-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(20px) saturate(1.2);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem !important;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }}
 
         html, body, [class*="css"] {{
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
         }}
 
-        /* Main: high-contrast type (near-black on light panel) */
-        [data-testid="stMain"] h1, section.main h1 {{
-            color: #0d180d !important;
-            font-size: 28px !important;
+        /* Typography */
+        [data-testid="stMain"] h1 {{
+            color: #111827 !important;
+            font-size: 2.25rem !important;
             font-weight: 800 !important;
-            letter-spacing: -0.03em;
-            line-height: 1.18 !important;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.9);
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem !important;
         }}
 
-        [data-testid="stMain"] h2, [data-testid="stMain"] h3,
-        section.main h2, section.main h3 {{
-            color: #0f1f0c !important;
-            font-size: 21px !important;
-            font-weight: 800 !important;
-            line-height: 1.22 !important;
-            margin-top: 0.85rem !important;
-            margin-bottom: 0.35rem !important;
-        }}
-
-        [data-testid="stMain"] p, [data-testid="stMain"] li,
-        [data-testid="stMain"] .stMarkdown, section.main .stMarkdown {{
-            color: #1a2a16 !important;
-            font-size: 16px !important;
-            line-height: 1.5 !important;
-            font-weight: 500;
-        }}
-
-        [data-testid="stMain"] .stCaption, section.main .stCaption {{
-            color: #2d4a28 !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            line-height: 1.4 !important;
-        }}
-
-        [data-testid="stMain"] label, [data-testid="stMain"] [data-testid="stWidgetLabel"] label {{
-            color: #142814 !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-        }}
-
-        [data-testid="stMain"] .stCheckbox label p,
-        [data-testid="stMain"] .stRadio label p {{
-            color: #1a2a16 !important;
-            font-size: 15px !important;
-            font-weight: 500 !important;
-        }}
-
-        h1 {{
-            color: {AGRI["text_primary"]} !important;
-            font-size: 22px !important;
+        [data-testid="stMain"] h2, [data-testid="stMain"] h3 {{
+            color: #111827 !important;
+            font-size: 1.5rem !important;
             font-weight: 700 !important;
+            margin-top: 2rem !important;
+            margin-bottom: 1rem !important;
         }}
 
-        h2, h3 {{
-            color: {AGRI["text_primary"]} !important;
-            font-size: 18px !important;
-            font-weight: 600 !important;
+        [data-testid="stMain"] p, [data-testid="stMain"] li {{
+            color: #4B5563 !important;
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
         }}
 
-        p, li, label, .stCaption, .stMarkdown, .stText {{
-            color: {AGRI["text_secondary"]};
-            font-size: 14px;
+        [data-testid="stMain"] .stCaption {{
+            color: #6B7280 !important;
+            font-size: 0.875rem !important;
         }}
 
-        div[data-testid="column"] > div {{
-            height: 100%;
-        }}
-
-        .element-container, .stMarkdown, .stPlotlyChart, .stDataFrame, [data-testid="stMetric"] {{
-            margin-bottom: 0.85rem;
-        }}
-
-        /* ——— Dark green control panel (sidebar) ——— */
+        /* ——— Sidebar ——— */
         [data-testid="stSidebar"] {{
-            background: linear-gradient(165deg, {CP["bg_c"]} 0%, {CP["bg_b"]} 42%, {CP["bg_a"]} 100%) !important;
-            border-right: 3px solid {CP["border"]} !important;
-            box-shadow: 6px 0 24px rgba(0,0,0,0.35);
+            background: {CP["bg_c"]} !important;
+            border-right: 1px solid {CP["border"]} !important;
         }}
 
         [data-testid="stSidebar"] .block-container {{
-            padding: 0.55rem 0.65rem 0.75rem 0.65rem !important;
+            padding: 1.5rem 1rem !important;
         }}
 
-        [data-testid="stSidebar"] .element-container {{
-            margin-bottom: 0.38rem !important;
+        [data-testid="stSidebarNav"] {{
+            background: transparent !important;
+            margin-bottom: 2rem !important;
         }}
 
-        [data-testid="stSidebar"] h1 {{
-            color: {CP["text"]} !important;
-            font-size: 0.82rem !important;
-            font-weight: 800 !important;
-            letter-spacing: 0.12em !important;
-            text-transform: uppercase !important;
-            border-bottom: 1px solid {CP["border_soft"]};
-            padding-bottom: 0.35rem !important;
-            margin-bottom: 0.45rem !important;
+        [data-testid="stSidebarNav"] ul {{
+            padding-top: 1rem !important;
         }}
 
-        [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {{
-            color: {CP["text_label"]} !important;
-            font-size: 0.95rem !important;
-            font-weight: 700 !important;
-            margin-top: 0.35rem !important;
-            margin-bottom: 0.25rem !important;
+        [data-testid="stSidebarNav"] a {{
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 0.5rem !important;
+            border-radius: 0.5rem !important;
+            transition: all 0.2s ease !important;
+            border-left: 3px solid transparent !important;
         }}
 
-        [data-testid="stSidebar"] [data-testid="stWidgetLabel"] label,
-        [data-testid="stSidebar"] label {{
-            color: {CP["text_label"]} !important;
-            font-size: 13px !important;
+        [data-testid="stSidebarNav"] a:hover {{
+            background: rgba(255, 255, 255, 0.05) !important;
+        }}
+
+        [data-testid="stSidebarNav"] a[aria-current="page"] {{
+            background: rgba(16, 185, 129, 0.1) !important;
+            border-left: 3px solid #10B981 !important;
+        }}
+
+        [data-testid="stSidebarNav"] a span {{
+            color: {CP["nav_rb_light"]} !important;
+            font-weight: 500 !important;
+        }}
+
+        [data-testid="stSidebarNav"] a[aria-current="page"] span {{
+            color: #FFFFFF !important;
             font-weight: 600 !important;
-            line-height: 1.3 !important;
         }}
 
-        [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] .stMarkdown p,
-        [data-testid="stSidebar"] .stMarkdown li {{
-            color: {CP["text"]} !important;
-            font-size: 13px !important;
-            line-height: 1.4 !important;
+        /* Sidebar Headers */
+        [data-testid="stSidebar"] h1 {{
+            color: #94A3B8 !important;
+            font-size: 0.75rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            margin-top: 2rem !important;
+            margin-bottom: 1rem !important;
         }}
 
-        [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] small {{
-            color: {CP["text_muted"]} !important;
-            font-size: 11.5px !important;
-            line-height: 1.35 !important;
-        }}
-
-        [data-testid="stSidebar"] .stCheckbox label p, [data-testid="stSidebar"] .stCheckbox span,
-        [data-testid="stSidebar"] .stRadio label p, [data-testid="stSidebar"] .stRadio span {{
-            color: {CP["text"]} !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-        }}
-
-        [data-testid="stSidebar"] [data-baseweb="select"] > div,
-        [data-testid="stSidebar"] .stDateInput input,
-        [data-testid="stSidebar"] .stNumberInput input,
-        [data-testid="stSidebar"] .stTextInput input,
-        [data-testid="stSidebar"] .stTextArea textarea {{
+        /* Form Controls in Sidebar */
+        [data-testid="stSidebar"] [data-baseweb="select"] > div {{
             background-color: {CP["input_bg"]} !important;
-            color: {CP["input_text"]} !important;
-            border: 2px solid {CP["input_border"]} !important;
-            border-radius: 6px !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-        }}
-
-        [data-testid="stSidebar"] [data-baseweb="select"] span {{
-            color: {CP["input_text"]} !important;
+            border: 1px solid {CP["input_border"]} !important;
+            color: #F8FAFC !important;
         }}
 
         [data-testid="stSidebar"] .stMultiSelect [data-baseweb="tag"] {{
-            background: {CP["btn_from"]} !important;
-            color: {CP["btn_text"]} !important;
-            border: 1px solid {CP["border"]} !important;
-            font-weight: 600 !important;
-            font-size: 12px !important;
+            background: #10B981 !important;
+            color: white !important;
         }}
 
-        [data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {{
-            padding-top: 0.35rem;
-        }}
-
-        [data-testid="stSidebar"] .stSlider [data-testid="stThumbValue"] {{
-            color: {CP["text"]} !important;
-            font-size: 13px !important;
-            font-weight: 700 !important;
-        }}
-
-        [data-testid="stSidebar"] [data-baseweb="tag"] {{
-            background: rgba(255,255,255,0.12) !important;
-            border: 1px solid {CP["border_soft"]} !important;
-        }}
-
-        [data-testid="stSidebar"] [data-baseweb="tag"] span {{
-            color: {CP["text"]} !important;
-            font-weight: 600 !important;
-        }}
-
-        [data-testid="stSidebar"] .stButton button,
-        [data-testid="stSidebar"] .stDownloadButton button {{
-            background: linear-gradient(180deg, {CP["btn_from"]} 0%, {CP["btn_to"]} 100%) !important;
-            color: {CP["btn_text"]} !important;
-            border: 2px solid #2d6b28 !important;
-            border-radius: 8px !important;
-            font-weight: 800 !important;
-            font-size: 13px !important;
-            letter-spacing: 0.02em;
-        }}
-
-        [data-testid="stSidebar"] .stButton button:hover,
-        [data-testid="stSidebar"] .stDownloadButton button:hover {{
-            filter: brightness(1.08);
-            color: {CP["btn_text"]} !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stExpander"] {{
-            background: rgba(255,255,255,0.07) !important;
-            border: 1px solid {CP["border_soft"]} !important;
-            border-radius: 8px !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stExpander"] summary,
-        [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
-        [data-testid="stSidebar"] [data-testid="stExpander"] summary span {{
-            color: {CP["text"]} !important;
-            font-size: 13px !important;
-            font-weight: 700 !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stExpander"] .stMarkdown code,
-        [data-testid="stSidebar"] code {{
-            background: {CP["code_bg"]} !important;
-            color: {CP["code_text"]} !important;
-            font-size: 11px !important;
-            border: 1px solid {CP["border_soft"]} !important;
-            padding: 2px 5px !important;
-            border-radius: 4px !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stFileUploader"] section,
-        [data-testid="stSidebar"] [data-testid="stFileUploader"] small {{
-            color: {CP["text_muted"]} !important;
-            font-size: 11.5px !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {{
-            background: rgba(255,255,255,0.08) !important;
-            border: 2px dashed {CP["border_soft"]} !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] span {{
-            color: {CP["text_label"]} !important;
-            font-size: 12.5px !important;
-            font-weight: 600 !important;
-        }}
-
-        [data-testid="stSidebar"] .stAlert {{
-            font-size: 12.5px !important;
-            line-height: 1.4 !important;
-        }}
-
-        [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {{
-            gap: 0.35rem;
-        }}
-
-        [data-testid="stSidebar"] hr {{
-            border-color: {CP["border_soft"]} !important;
-            margin: 0.5rem 0 !important;
-        }}
-
-        /* Multipage links: app, Anomaly Detection, Interpretability */
-        [data-testid="stSidebarNav"] {{
-            padding-bottom: 0.65rem !important;
-            margin-bottom: 0.45rem !important;
-            border-bottom: 1px solid {CP["nav_rb_border"]} !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"] {{
-            text-decoration: none !important;
-            border-radius: 8px !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"] span,
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"] p {{
-            color: {CP["nav_rb_light"]} !important;
-            font-weight: 700 !important;
-            font-size: 15px !important;
-            letter-spacing: 0.02em !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45) !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"]:not([aria-current="page"]) span,
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"]:not([aria-current="page"]) p {{
-            color: {CP["nav_rb_light"]} !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"]:hover span,
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"]:hover p {{
-            color: {CP["nav_rb_hover"]} !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"][aria-current="page"] span,
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"][aria-current="page"] p {{
-            color: {CP["nav_rb_active"]} !important;
-            font-weight: 800 !important;
-            text-shadow: none !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"][aria-current="page"] {{
-            background: rgba(255, 220, 210, 0.95) !important;
-            border: 1px solid #C45A4A !important;
-        }}
-
-        [data-testid="stSidebarNav"] ul[data-testid="stSidebarNavItems"] li {{
-            margin-bottom: 0.2rem !important;
-        }}
-
-        /* Fallback if link text is not wrapped in span/p */
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"]:not([aria-current="page"]) {{
-            color: {CP["nav_rb_light"]} !important;
-        }}
-
-        [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"][aria-current="page"] {{
-            color: {CP["nav_rb_active"]} !important;
-        }}
-
+        /* Metrics */
         [data-testid="stMetric"] {{
-            background-color: {AGRI["card_bg"]};
-            border-radius: 10px;
-            padding: 0.9rem;
-            border: 1px solid {AGRI["border_card"]};
-            box-shadow: 0 2px 8px rgba(45,58,39,0.06);
-            min-height: 122px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            overflow: hidden;
-        }}
-
-        /* Main panel: bolder KPIs */
-        [data-testid="stMain"] [data-testid="stMetric"] {{
-            background: linear-gradient(180deg, #FFFFFF 0%, #F6FAF4 100%) !important;
-            border: 2px solid #7A9B72 !important;
+            background: white !important;
+            border: 1px solid #E5E7EB !important;
             border-radius: 12px !important;
-            padding: 1rem 1.05rem !important;
-            box-shadow: 0 4px 20px rgba(20, 45, 25, 0.1), inset 0 1px 0 #fff !important;
-            min-height: 128px !important;
-        }}
-
-        [data-testid="stMetricLabel"] {{
-            margin-bottom: 0.45rem;
+            padding: 1.5rem !important;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
         }}
 
         [data-testid="stMetricLabel"] p {{
-            color: #2d3f28 !important;
-            font-size: 14px !important;
+            color: #6B7280 !important;
+            font-size: 0.875rem !important;
             font-weight: 600 !important;
-            line-height: 1.35 !important;
-            white-space: normal !important;
-            overflow-wrap: anywhere;
+            text-transform: uppercase !important;
+            letter-spacing: 0.025em !important;
         }}
 
-        [data-testid="stMain"] [data-testid="stMetricLabel"] p {{
-            color: #1a3014 !important;
-            font-size: 15px !important;
+        [data-testid="stMetricValue"] div {{
+            color: #111827 !important;
+            font-size: 1.875rem !important;
             font-weight: 700 !important;
         }}
 
-        [data-testid="stMetricValue"] {{
-            color: {AGRI["text_primary"]} !important;
-            font-size: 1.7rem !important;
-            font-weight: 700 !important;
-            line-height: 1.15 !important;
-            white-space: normal !important;
-            overflow-wrap: anywhere;
-        }}
-
-        [data-testid="stMain"] [data-testid="stMetricValue"] {{
-            color: #061806 !important;
-            font-size: 1.85rem !important;
-            font-weight: 800 !important;
-        }}
-
-        .stDataFrame, [data-testid="stExpander"], .stAlert {{
-            background-color: {AGRI["card_bg"]};
-            border-radius: 10px;
-            border: 1px solid {AGRI["border_card"]};
-            box-shadow: 0 2px 8px rgba(45,58,39,0.06);
-            padding: 0.35rem;
-            overflow: hidden;
-        }}
-
-        /* Plotly: avoid clipping mode bar / zoom; keep pointer events on chart */
+        /* Charts */
         .stPlotlyChart {{
-            background-color: {AGRI["card_bg"]};
-            border-radius: 10px;
-            border: 1px solid {AGRI["border_card"]};
-            box-shadow: 0 2px 8px rgba(45,58,39,0.06);
-            padding: 0.35rem;
-            overflow: visible !important;
-        }}
-
-        .stPlotlyChart .js-plotly-plot,
-        .stPlotlyChart .plot-container {{
-            pointer-events: auto !important;
-            touch-action: pan-x pan-y pinch-zoom !important;
-        }}
-
-        /* Main: charts & tables stand out */
-        [data-testid="stMain"] .stPlotlyChart {{
-            background: #FDFEFC !important;
-            border: 2px solid #5A7D52 !important;
+            background: white !important;
+            border: 1px solid #E5E7EB !important;
             border-radius: 12px !important;
-            padding: 0.55rem 0.65rem 0.75rem 0.65rem !important;
-            box-shadow: 0 6px 28px rgba(15, 40, 18, 0.12) !important;
-            overflow: visible !important;
+            padding: 1rem !important;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1) !important;
         }}
 
-        [data-testid="stMain"] .stDataFrame {{
-            background: #FDFEFC !important;
-            border: 2px solid #6B8B62 !important;
-            border-radius: 10px !important;
-            padding: 0.45rem !important;
-            font-size: 14px !important;
+        /* Custom KPI Card Style */
+        .kpi-card {{
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
         }}
-
-        [data-testid="stMain"] [data-testid="stExpander"] {{
-            background: #FAFCF8 !important;
-            border: 2px solid #8AAA82 !important;
-            border-radius: 10px !important;
+        .kpi-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }}
-
-        [data-testid="stMain"] [data-testid="stExpander"] summary p,
-        [data-testid="stMain"] [data-testid="stExpander"] summary span {{
-            color: #0d1a0d !important;
-            font-size: 15px !important;
-            font-weight: 700 !important;
-        }}
-
-        [data-testid="stMain"] .stAlert {{
-            border: 2px solid #6B9B5E !important;
-            font-size: 14px !important;
-            line-height: 1.45 !important;
-        }}
-
-        .stPlotlyChart > div,
-        .stDataFrame > div {{
-            width: 100%;
-        }}
-
-        .js-plotly-plot, .plotly, .plot-container {{
-            max-width: 100%;
-        }}
-
-        .status-label {{
-            font-size: 12px;
-            font-weight: 700;
-            color: #3d5238;
-            margin-bottom: 4px;
+        .kpi-label {{
+            color: #6B7280;
+            font-size: 0.75rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
         }}
-
-        [data-testid="stMain"] .status-label {{
-            font-size: 13px !important;
-            color: #061806 !important;
-            letter-spacing: 0.05em !important;
-        }}
-
-        .status-badge {{
-            display: inline-block;
-            background: #E8F5E4;
-            color: #0d280d;
-            border: 2px solid #5A8F52;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 14px;
+        .kpi-value {{
+            color: #111827;
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 12px;
-            max-width: 100%;
-            white-space: normal;
-            overflow-wrap: anywhere;
+            margin-top: 0.25rem;
         }}
+        .kpi-trend {{
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+        }}
+        .trend-up {{ color: #10B981; }}
+        .trend-down {{ color: #EF4444; }}
 
-        [data-testid="stMain"] .status-badge {{
-            font-size: 15px !important;
-            padding: 10px 16px !important;
-            box-shadow: 0 2px 12px rgba(30, 70, 35, 0.12);
-        }}
-
-        .model-badge {{
-            display: inline-block;
-            background: #E3F0DE;
-            color: #062006;
-            border: 2px solid #3D6B35;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            max-width: 100%;
-            white-space: normal;
-            overflow-wrap: anywhere;
-        }}
-
-        [data-testid="stMain"] .model-badge {{
-            font-size: 15px !important;
-            padding: 10px 16px !important;
-            box-shadow: 0 2px 12px rgba(30, 70, 35, 0.12);
-        }}
         </style>
         """,
         unsafe_allow_html=True,

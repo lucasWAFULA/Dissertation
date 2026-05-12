@@ -18,6 +18,17 @@ This guide walks through deploying the Streamlit + FastAPI application to Google
 
 ---
 
+## **Current Deployment**
+
+- **Project ID:** marketpulseai-496112
+- **Service:** food-price-anomaly
+- **Region:** us-central1
+- **URL:** https://food-price-anomaly-jlr3ehxyia-uc.a.run.app
+- **Latest successful build:** 41672af9-9b44-4d9e-8039-2d199d72940e
+
+Notes: The app is running Streamlit on Cloud Run. The `Dockerfile` is configured to use Cloud Run's `PORT` environment variable and a health check was added. The `cloudbuild.yaml` builds the image, pushes it to Container Registry, then deploys using `gcloud run deploy`.
+
+
 ## 📋 Prerequisites
 
 1. **Google Cloud Account** - Sign up at [https://cloud.google.com](https://cloud.google.com)
@@ -358,6 +369,27 @@ gcloud run services update food-price-anomaly \
 ```
 
 ---
+
+## **Automatic Deploy (GitHub → Cloud Build)**
+
+You can create a Cloud Build trigger so every push to `main` automatically builds and deploys using `cloudbuild.yaml`.
+
+Quick: run the script provided in the repository (adjust args if needed):
+
+```bash
+./scripts/create_gcb_trigger.sh marketpulseai-496112 lucasWAFULA Dissertation food-price-anomaly-trigger
+```
+
+Or from PowerShell:
+
+```powershell
+.\scripts\create_gcb_trigger.ps1 -ProjectId marketpulseai-496112 -RepoOwner lucasWAFULA -RepoName Dissertation -TriggerName food-price-anomaly-trigger
+```
+
+Notes:
+- The command will prompt to connect GitHub via the Cloud Console if not already connected.
+- After creation, verify the trigger in Cloud Console: Cloud Build → Triggers.
+
 
 ## 🆘 Troubleshooting
 

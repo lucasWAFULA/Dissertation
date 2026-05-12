@@ -29,10 +29,10 @@ COPY *.cpg ./
 COPY *.prj ./
 
 # Expose port
-EXPOSE 8501
+EXPOSE 8080
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+HEALTHCHECK CMD curl --fail http://localhost:${PORT:-8501}/_stcore/health
 
 # Run Streamlit
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["bash", "-lc", "streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0"]
