@@ -98,9 +98,43 @@ def apply_custom_theme() -> None:
             border-right: 1px solid {AGRI['border_sidebar']} !important;
         }}
 
+        /* Navigation Links */
+        [data-testid="stSidebarNav"] ul {{
+            padding-top: 2rem !important;
+        }}
+
+        [data-testid="stSidebarNav"] a {{
+            padding: 0.85rem 1.25rem !important;
+            margin: 0.25rem 0.75rem !important;
+            border-radius: 12px !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            border-left: 4px solid transparent !important;
+            text-decoration: none !important;
+        }}
+
+        [data-testid="stSidebarNav"] a:hover {{
+            background: rgba(255, 255, 255, 0.05) !important;
+            transform: translateX(4px);
+        }}
+
+        /* Active Page Highlighting */
         [data-testid="stSidebarNav"] a[aria-current="page"] {{
             background: rgba(16, 185, 129, 0.15) !important;
             border-left: 4px solid {AGRI['accent_primary']} !important;
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.05) !important;
+        }}
+
+        [data-testid="stSidebarNav"] a span {{
+            color: #94A3B8 !important;
+            font-size: 1rem !important;
+            font-weight: 500 !important;
+            transition: color 0.2s ease;
+        }}
+
+        [data-testid="stSidebarNav"] a[aria-current="page"] span {{
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
         }}
 
         /* --- Metrics & Cards --- */
