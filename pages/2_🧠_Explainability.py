@@ -10,12 +10,15 @@ from src.streamlit_plotly import plotly_chart_interactive
 from src.theme import apply_custom_theme, render_badge
 
 
-st.set_page_config(page_title="Interpretability", page_icon=":mag:", layout="wide")
+st.set_page_config(page_title="Explainability Hub | Market Pulse AI", page_icon="🧠", layout="wide")
 apply_custom_theme()
 
-st.title("Interpretability")
-st.caption(
-    "SHAP-based explanation page for the deployed anomaly detection model. Use this page to inspect global feature influence and local case-level drivers."
+st.title("🧠 Intelligence Explainability")
+st.markdown(
+    """
+    Explore the **SHAP (SHapley Additive exPlanations)** drivers behind the model's decisions. 
+    This transparency layer helps you understand which features are pushing price records toward 'Anomaly' status.
+    """
 )
 
 context = get_app_context()
@@ -74,11 +77,19 @@ with top_section[0]:
                 x="mean_abs_shap",
                 y="feature",
                 orientation="h",
-                title="Mean absolute SHAP value by feature",
+                title="Global Feature Importance (Mean |SHAP|)",
                 color="mean_abs_shap",
-                color_continuous_scale=["#B8860B", "#A63D2E"],
+                color_continuous_scale=["#10B981", "#EF4444"], # Emerald to Red
             )
-            summary_fig.update_layout(showlegend=False)
+            summary_fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font_color="#F8FAFC",
+                title_font_family="Outfit",
+                xaxis=dict(showgrid=True, gridcolor="#334155"),
+                yaxis=dict(showgrid=False),
+                showlegend=False
+            )
             plotly_chart_interactive(summary_fig)
     else:
         st.info("Click the button to generate a SHAP summary for the filtered historical sample.")
@@ -122,9 +133,18 @@ with local_cols[0]:
                 x="shap_value",
                 y="feature",
                 orientation="h",
-                title="Local SHAP contribution by feature",
+                title="Case-Level Driver Analysis (SHAP)",
                 color="shap_value",
-                color_continuous_scale=["#3D7C47", "#E8EDE4", "#A63D2E"],
+                color_continuous_scale=["#10B981", "#334155", "#EF4444"], # Emeral -> Neutral -> Red
+            )
+            local_fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font_color="#F8FAFC",
+                title_font_family="Outfit",
+                xaxis=dict(showgrid=True, gridcolor="#334155"),
+                yaxis=dict(showgrid=False),
+                showlegend=False
             )
             plotly_chart_interactive(local_fig)
     else:
