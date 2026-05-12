@@ -18,6 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY 📈_Market_Intelligence.py .
 COPY src/ ./src/
+COPY scripts/ ./scripts/
 COPY pages/ ./pages/
 COPY outputs/ ./outputs/
 COPY *.csv ./
