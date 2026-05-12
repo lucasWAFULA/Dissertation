@@ -43,5 +43,5 @@ substitutions:
   _SERVICE_NAME: 'food-price-anomaly'
 
 options:
-  machineType: 'N1_HIGHCPU_8'
+  machineType: 'E2_HIGHCPU_8'
   logging: CLOUD_LOGGING_ONLY
