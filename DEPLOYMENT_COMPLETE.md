@@ -22,7 +22,50 @@
 
 ## 🏗️ Deployment Options
 
-### Option 1: Docker Local Deployment (Fastest)
+### Option 1: Google Cloud Run (RECOMMENDED) ⭐
+
+**Best choice for:**
+- No credit card hassles
+- Free tier: 2M requests/month + 360K GB-seconds
+- Serverless auto-scaling
+- Pay only what you use
+
+**Quick Deployment:**
+
+**Windows (PowerShell):**
+```powershell
+.\deploy-gcloud.ps1 -ProjectId YOUR_GCP_PROJECT_ID
+```
+
+**macOS/Linux (Bash):**
+```bash
+chmod +x deploy-gcloud.sh
+./deploy-gcloud.sh YOUR_GCP_PROJECT_ID
+```
+
+**Manual Setup:**
+```bash
+gcloud run deploy food-price-anomaly \
+  --source . \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 2Gi \
+  --cpu 2
+```
+
+**Features:**
+- ✅ Automatic HTTPS + SSL
+- ✅ Global CDN
+- ✅ Auto-scaling (0-100 instances)
+- ✅ Free tier very generous
+- ✅ No payment required initially
+
+📖 **Full Guide:** [GOOGLE_CLOUD_DEPLOYMENT.md](GOOGLE_CLOUD_DEPLOYMENT.md)
+
+---
+
+### Option 2: Docker Local Deployment (Testing)
 
 **Quick Start:**
 ```bash
@@ -41,43 +84,15 @@ docker-compose up --build
 
 ---
 
-### Option 2: Heroku Cloud Deployment (Recommended)
-
-**One-Click Setup:**
-
-```bash
-# 1. Login to Heroku
-heroku login
-
-# 2. Create app
-heroku create your-awesome-app-name
-
-# 3. Deploy from GitHub
-git push heroku main
-
-# 4. View live app
-heroku open
-```
-
-**Live URL:** `https://your-awesome-app-name.herokuapp.com`
-
-**Features:**
-- Automatic HTTPS
-- Auto-scaling
-- Free tier available (limited)
-- Production-ready
-
----
-
-### Option 3: Manual Cloud Deployment
+### Option 3: Other Cloud Platforms
 
 **Supported Platforms:**
 - ✅ AWS (EC2, Elastic Beanstalk, AppRunner)
-- ✅ Google Cloud Run
 - ✅ Azure App Service
 - ✅ DigitalOcean App Platform
 - ✅ Railway.app
 - ✅ Render
+- ✅ Fly.io
 
 **Use Docker image:** See [docker-compose.yml](docker-compose.yml)
 
@@ -87,13 +102,16 @@ heroku open
 
 | File | Purpose |
 |------|---------|
+| `GOOGLE_CLOUD_DEPLOYMENT.md` | Comprehensive Google Cloud guide ⭐ |
+| `deploy-gcloud.ps1` | Windows deployment script |
+| `deploy-gcloud.sh` | Linux/macOS deployment script |
+| `cloudbuild.yaml` | Google Cloud Build configuration |
+| `cloud-run-service.yaml` | Cloud Run service definition |
 | `Dockerfile` | Streamlit container image |
 | `Dockerfile.api` | FastAPI backend container |
-| `Procfile` | Heroku process definitions |
-| `runtime.txt` | Python version specification |
 | `docker-compose.yml` | Multi-container orchestration |
 | `.env.example` | Environment variables template |
-| `HEROKU_DEPLOYMENT.md` | Detailed Heroku guide |
+| `HEROKU_DEPLOYMENT.md` | Legacy Heroku guide (for reference) |
 | `.streamlit/config.toml` | Streamlit configuration |
 
 ---
@@ -153,25 +171,37 @@ cp .env.example .env
 
 ## 🎯 Next Steps
 
-### For Heroku Deployment:
+### For Google Cloud Run Deployment (RECOMMENDED):
 
-1. **Prepare Heroku:**
-   ```bash
-   heroku create your-app-name
+1. **Create Google Cloud Account** (free tier):
+   - Visit: https://cloud.google.com
+   - Sign up (no credit card required initially)
+
+2. **Install Google Cloud SDK**:
+   - Download: https://cloud.google.com/sdk/docs/install
+
+3. **Deploy with one command (Windows)**:
+   ```powershell
+   .\deploy-gcloud.ps1 -ProjectId YOUR_GCP_PROJECT_ID
    ```
 
-2. **Deploy:**
+4. **Or deploy with one command (macOS/Linux)**:
    ```bash
-   git push heroku main
+   ./deploy-gcloud.sh YOUR_GCP_PROJECT_ID
    ```
 
-3. **Monitor:**
-   ```bash
-   heroku logs --tail
-   ```
+5. **Monitor Your App**:
+   - View logs: `gcloud run services logs read food-price-anomaly --region us-central1`
+   - Open dashboard: https://console.cloud.google.com/run
 
-4. **Access:**
-   - Visit: `https://your-app-name.herokuapp.com`
+**Free tier covers:**
+- 2 million requests/month
+- 360,000 GB-seconds/month
+- No credit card needed!
+
+📖 **Detailed Guide:** [GOOGLE_CLOUD_DEPLOYMENT.md](GOOGLE_CLOUD_DEPLOYMENT.md)
+
+---
 
 ### For Docker Local Testing:
 
@@ -186,24 +216,33 @@ curl http://localhost:8000/health
 open http://localhost:8501
 ```
 
-### For Production Scaling:
+---
+
+### For Production Scaling (Google Cloud):
 
 ```bash
-# Increase capacity
-heroku dyno:type Standard-2x -a your-app-name
+# Increase max instances (for more traffic)
+gcloud run services update food-price-anomaly \
+  --region us-central1 \
+  --max-instances 50
 
-# Scale workers
-heroku ps:scale web=2 api=2 -a your-app-name
+# Increase memory
+gcloud run services update food-price-anomaly \
+  --region us-central1 \
+  --memory 4Gi
 
 # Monitor performance
-heroku metrics -a your-app-name
+gcloud run services describe food-price-anomaly --region us-central1
 ```
 
 ---
 
 ## 📚 Documentation Files
 
-- [HEROKU_DEPLOYMENT.md](HEROKU_DEPLOYMENT.md) - Comprehensive Heroku guide
+- [GOOGLE_CLOUD_DEPLOYMENT.md](GOOGLE_CLOUD_DEPLOYMENT.md) - Comprehensive Google Cloud guide ⭐ **START HERE**
+- [deploy-gcloud.ps1](deploy-gcloud.ps1) - Windows deployment script
+- [deploy-gcloud.sh](deploy-gcloud.sh) - Linux/macOS deployment script
+- [HEROKU_DEPLOYMENT.md](HEROKU_DEPLOYMENT.md) - Legacy Heroku guide (for reference)
 - [docs/API_DEPLOYMENT.md](docs/API_DEPLOYMENT.md) - FastAPI details
 - [README.md](README.md) - Project overview
 - [APPENDIX_Technical_Implementation.md](APPENDIX_Technical_Implementation.md) - Technical details
@@ -223,10 +262,32 @@ Before production deployment:
 
 ---
 
-## 💰 Cost Estimates (Heroku)
+## 💰 Cost Estimates
+
+### Google Cloud Run (Recommended)
+
+**Free Tier:**
+- 2 million requests/month
+- 360,000 GB-seconds/month (compute)
+- 180,000 vCPU-seconds/month
+- 1 GB egress/month
+
+**Beyond Free Tier (Pay-as-you-go):**
+- Compute: $0.00001234 per GB-second
+- vCPU: $0.00002400 per vCPU-second
+- Requests: $0.40 per million requests
+
+**Estimate:** 
+- Free tier covers ~10,000 requests/day
+- 100,000 requests/day = ~$10-20/month
+- No minimum charges or monthly fees!
+
+---
+
+### Heroku (For Reference - Not Recommended due to Payment Issues)
 
 | Tier | Cost | Suitable For |
-|------|------|-------------|
+|------|------|------------|
 | Free | $0 | Testing/Demo (sleeps after 30 min) |
 | Hobby | $7/mo | Development |
 | Standard-1X | $25/mo | Production (light) |
@@ -249,9 +310,11 @@ Before production deployment:
 ## 📞 Support
 
 - **GitHub Issues:** https://github.com/lucasWAFULA/Dissertation/issues
-- **Heroku Support:** https://help.heroku.com
+- **Google Cloud Docs:** https://cloud.google.com/run/docs ⭐
+- **Google Cloud Console:** https://console.cloud.google.com
 - **Streamlit Docs:** https://docs.streamlit.io
 - **FastAPI Docs:** https://fastapi.tiangolo.com
+- **Heroku Support:** https://help.heroku.com (legacy option)
 
 ---
 
@@ -270,4 +333,7 @@ Before production deployment:
 
 **Deployment Date:** May 12, 2026  
 **Repository:** https://github.com/lucasWAFULA/Dissertation  
+**Recommended Platform:** Google Cloud Run ⭐  
 **Status:** Ready for Production 🚀
+
+**Next Step:** Follow [GOOGLE_CLOUD_DEPLOYMENT.md](GOOGLE_CLOUD_DEPLOYMENT.md) to deploy in minutes!

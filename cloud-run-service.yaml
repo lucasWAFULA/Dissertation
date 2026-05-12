@@ -1,0 +1,52 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: food-price-anomaly
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '1'
+        autoscaling.knative.dev/maxScale: '10'
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      serviceAccountName: default
+      containers:
+      - image: gcr.io/PROJECT_ID/food-price-app:latest
+        ports:
+        - containerPort: 8501
+          name: http1
+        resources:
+          requests:
+            cpu: '2'
+            memory: '2Gi'
+          limits:
+            cpu: '4'
+            memory: '4Gi'
+        env:
+        - name: STREAMLIT_SERVER_HEADLESS
+          value: 'true'
+        - name: STREAMLIT_SERVER_PORT
+          value: '8501'
+        - name: STREAMLIT_SERVER_ADDRESS
+          value: '0.0.0.0'
+        - name: PYTHONUNBUFFERED
+          value: '1'
+        - name: LOG_LEVEL
+          value: 'INFO'
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 3
+      timeoutSeconds: 300
