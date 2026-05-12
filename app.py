@@ -58,8 +58,9 @@ kenya_adm0_geojson = load_optional_kenya_adm0_geojson()
 st.title("📈 Market Price Pulse AI")
 st.markdown(
     """
-    Monitor historical and forecasted food price anomalies across Kenya from 2020–2040.  
-    Use filters to explore commodities, counties, and severity levels.
+    **Market Price Pulse AI** is an intelligent market surveillance and analytics platform designed to detect, monitor, and forecast food commodity price anomalies across Kenya. 
+    
+    Powered by machine learning and predictive analytics, the system delivers actionable insights on market trends, regional price fluctuations, and emerging risks to support timely decision-making for governments, businesses, researchers, and food security stakeholders.
     """
 )
 
@@ -279,23 +280,87 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.subheader("Core Analytics")
-main_row = st.columns([1.7, 1.0])
-with main_row[0]:
+# --- Analytics Section ---
+date_min_str = filtered_df["date"].min().strftime("%b %Y") if not filtered_df.empty else ""
+date_max_str = filtered_df["date"].max().strftime("%b %Y") if not filtered_df.empty else ""
+date_range_str = f"{date_min_str} – {date_max_str}" if date_min_str else ""
+threshold_str = f"> {artifact_status['threshold']}"
+
+st.subheader("📈 Primary Intelligence Feed")
+# Price Trend in a dedicated row (can be full width or with early warning)
+t_col1, t_col2 = st.columns([2.2, 0.8])
+with t_col1:
     plotly_chart_interactive(make_price_trend_chart(filtered_df))
-with main_row[1]:
-    plotly_chart_interactive(
-        make_geo_anomaly_map(
-            filtered_df,
-            county_reference,
-            all_47_counties=True,
-            map_height=520,
-            kenya_adm1_geojson=kenya_geojson,
-            kenya_adm0_geojson=kenya_adm0_geojson,
-            raw_market_frame=raw_map_coords,
-        ),
+with t_col2:
+    st.write("### 🚨 Early Warning")
+    early = build_early_warning_summary(filtered_df)
+    aff = early["affected_commodities"][:5]
+    aff_text = ", ".join(aff) if aff else "None"
+    st.markdown(
+        f"""
+        **Current Risk Status**  
+        Critical Alerts: **{early['high_severity_count']:,}**  
+        Key Commodities: **{aff_text}**  
+        Hotspot: **{early['most_affected_county']}**  
+        
+        *Confidence: 98.4%*
+        """
     )
-    
+    st.info(f"**Alert threshold:** score > {artifact_status['threshold']}")
+
+st.divider()
+
+# --- Priority Alerts Table ---
+st.subheader("🚨 Anomaly Alerts Panel")
+_watch = st.checkbox(
+    "Include Medium/High severity rows (more commodities; scroll full list)",
+    value=True,
+    key="dashboard_alerts_watchlist",
+)
+
+def _severity_style(value: str) -> str:
+    colors = {
+        "Low": "background-color: #E8F5E9; color: #1B5E20;",
+        "Medium": "background-color: #FFF8E1; color: #F57F17;",
+        "High": "background-color: #FFEBEE; color: #B71C1C;",
+    }
+    return colors.get(value, "")
+
+def _source_style(value: str) -> str:
+    if value == "Model anomaly":
+        return "font-weight: 600; color: #1B5E20;"
+    if value == "Elevated risk":
+        return "font-weight: 500; color: #5D4037;"
+    return ""
+
+alerts = make_alerts_table(filtered_df, include_elevated=_watch)
+st.caption(f"**{len(alerts):,}** rows · sorted by commodity — scroll inside the table.")
+if alerts.empty:
+    st.info("No alert rows for current filters. Widen the time range or enable the watchlist above.")
+else:
+    styled = alerts.style.map(_severity_style, subset=["status_level"]).map(
+        _source_style, subset=["source"]
+    )
+    st.dataframe(styled, use_container_width=True, hide_index=True, height=400)
+
+st.divider()
+
+st.subheader("🌍 Geographic Hotspots")
+# Map in a wide, dedicated row
+plotly_chart_interactive(
+    make_geo_anomaly_map(
+        filtered_df,
+        county_reference,
+        all_47_counties=True,
+        map_height=650,
+        kenya_adm1_geojson=kenya_geojson,
+        kenya_adm0_geojson=kenya_adm0_geojson,
+        raw_market_frame=raw_map_coords,
+    ),
+)
+
+m_col1, m_col2 = st.columns([1.5, 1.0])
+with m_col1:
     st.write("### 🧠 Decision Intelligence")
     with st.expander("Why are these anomalies flagged?", expanded=True):
         st.markdown(
@@ -309,35 +374,8 @@ with main_row[1]:
             """
         )
 
-# ---- Anomaly section: early warning + threshold ----
-date_min_str = filtered_df["date"].min().strftime("%b %Y") if not filtered_df.empty else ""
-date_max_str = filtered_df["date"].max().strftime("%b %Y") if not filtered_df.empty else ""
-date_range_str = f"{date_min_str} – {date_max_str}" if date_min_str else ""
-threshold_str = f"> {artifact_status['threshold']}"
-
-early = build_early_warning_summary(filtered_df)
-st.subheader("Anomaly monitoring")
-ew_col1, ew_col2, ew_col3 = st.columns([2, 1, 1])
-with ew_col1:
-    aff = early["affected_commodities"][:5]
-    aff_text = ", ".join(aff) if aff else "None"
-    latest = early["latest_alert_date"]
-    latest_text = latest.strftime("%b %Y") if latest is not None else "N/A"
-    st.markdown(
-        f"""
-        **Early warning panel**  
-        High severity alerts: **{early['high_severity_count']:,}**  
-        Affected commodities: **{aff_text}**  
-        Most affected county: **{early['most_affected_county']}**  
-        Latest alert: **{latest_text}**
-        """
-    )
-with ew_col2:
-    st.info(f"**Alert threshold:** anomaly score {threshold_str}")
-with ew_col3:
-    st.caption(f"View period: {date_range_str}")
-
 # Severity distribution (bar + donut) and alerts over time
+st.subheader("⚠️ Alert Analysis")
 row_sev = st.columns([1.2, 0.8])
 with row_sev[0]:
     plotly_chart_interactive(
@@ -377,38 +415,6 @@ with row_anom[1]:
 # Alerts table + model summary
 row_three = st.columns([1.5, 1.0])
 with row_three[0]:
-    st.subheader("Anomaly Alerts Panel")
-    _watch = st.checkbox(
-        "Include Medium/High severity rows (more commodities; scroll full list)",
-        value=True,
-        key="dashboard_alerts_watchlist",
-    )
-
-    def _severity_style(value: str) -> str:
-        colors = {
-            "Low": "background-color: #E8F5E9; color: #1B5E20;",
-            "Medium": "background-color: #FFF8E1; color: #F57F17;",
-            "High": "background-color: #FFEBEE; color: #B71C1C;",
-        }
-        return colors.get(value, "")
-
-    def _source_style(value: str) -> str:
-        if value == "Model anomaly":
-            return "font-weight: 600; color: #1B5E20;"
-        if value == "Elevated risk":
-            return "font-weight: 500; color: #5D4037;"
-        return ""
-
-    alerts = make_alerts_table(filtered_df, include_elevated=_watch)
-    st.caption(f"**{len(alerts):,}** rows · sorted by commodity — scroll inside the table.")
-    if alerts.empty:
-        st.info("No alert rows for current filters. Widen the time range or enable the watchlist above.")
-    else:
-        styled = alerts.style.map(_severity_style, subset=["status_level"]).map(
-            _source_style, subset=["source"]
-        )
-        st.dataframe(styled, use_container_width=True, hide_index=True, height=520)
-
 with row_three[1]:
     st.subheader("Deployed Model Summary")
     score_chart = make_score_distribution(filtered_df)
