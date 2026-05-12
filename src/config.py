@@ -56,7 +56,7 @@ THRESHOLD_CANDIDATES = [
 ]
 
 # Database Configuration
-DATABASE_URL = "sqlite:///./market_intelligence.db"
+DATABASE_URL = "sqlite:////app/market_intelligence.db"
 
 # API Endpoints (WFP VAM)
 WFP_API_URL = "https://api.vam.wfp.org/8.1.0/Public/Price"

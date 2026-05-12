@@ -38,6 +38,9 @@ st.set_page_config(
 
 apply_custom_theme()
 
+from src.database import init_db
+init_db()
+
 def _format_metric(value: float) -> str:
     if isinstance(value, float) and math.isnan(value):
         return "N/A"
