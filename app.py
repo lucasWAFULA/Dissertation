@@ -412,24 +412,21 @@ with row_anom[0]:
 with row_anom[1]:
     plotly_chart_interactive(make_commodity_anomaly_trend(filtered_df))
 
-# Alerts table + model summary
-row_three = st.columns([1.5, 1.0])
-with row_three[0]:
-with row_three[1]:
-    st.subheader("Deployed Model Summary")
-    score_chart = make_score_distribution(filtered_df)
-    if score_chart is not None:
-        plotly_chart_interactive(score_chart)
+# Model summary
+st.subheader("🤖 Deployed Model Intelligence")
+score_chart = make_score_distribution(filtered_df)
+if score_chart is not None:
+    plotly_chart_interactive(score_chart)
 
-    feature_chart = make_feature_importance_chart(bundle.model, bundle.feature_names)
-    if feature_chart is not None:
-        plotly_chart_interactive(feature_chart)
+feature_chart = make_feature_importance_chart(bundle.model, bundle.feature_names)
+if feature_chart is not None:
+    plotly_chart_interactive(feature_chart)
 
-    if deployed_model_meta:
-        model_cols = st.columns(3)
-        model_cols[0].metric("F1-score", f"{float(deployed_model_meta.get('F1', float('nan'))):.3f}")
-        model_cols[1].metric("Recall", f"{float(deployed_model_meta.get('Recall', float('nan'))):.3f}")
-        model_cols[2].metric("AUC", f"{float(deployed_model_meta.get('AUC', float('nan'))):.3f}")
+if deployed_model_meta:
+    model_cols = st.columns(3)
+    model_cols[0].metric("F1-score", f"{float(deployed_model_meta.get('F1', float('nan'))):.3f}")
+    model_cols[1].metric("Recall", f"{float(deployed_model_meta.get('Recall', float('nan'))):.3f}")
+    model_cols[2].metric("AUC", f"{float(deployed_model_meta.get('AUC', float('nan'))):.3f}")
 
 with st.expander("Dashboard notes"):
     st.markdown(
