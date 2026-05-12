@@ -54,6 +54,13 @@ def save_prices_to_db(df: pd.DataFrame):
         session.close()
 
 def load_prices_from_db(limit: int = 1000) -> pd.DataFrame:
-    """Load the latest price records from the database."""
-    query = f"SELECT * FROM price_records ORDER BY date DESC LIMIT {limit}"
-    return pd.read_sql(query, con=engine)
+    """Load the latest price records from the database with safety guards."""
+    try:
+        query = f"SELECT * FROM price_records ORDER BY date DESC LIMIT {limit}"
+        return pd.read_sql(query, con=engine)
+    except Exception:
+        # Fallback if table doesn't exist yet
+        return pd.DataFrame()
+
+# AUTO-INITIALIZE: This ensures the table is created the moment this module is imported anywhere.
+init_db()

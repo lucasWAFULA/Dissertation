@@ -56,7 +56,10 @@ THRESHOLD_CANDIDATES = [
 ]
 
 # Database Configuration
-DATABASE_URL = "sqlite:////app/market_intelligence.db"
+# Database Configuration
+# Use absolute path to ensure compatibility across local (Windows) and Cloud (Linux)
+_db_path = (BASE_DIR / "market_intelligence.db").absolute().as_posix()
+DATABASE_URL = f"sqlite:///{_db_path}"
 
 # API Endpoints (WFP VAM)
 WFP_API_URL = "https://api.vam.wfp.org/8.1.0/Public/Price"
