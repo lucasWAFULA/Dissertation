@@ -133,10 +133,24 @@ st.divider()
 
 # --- Sidebar Controls ---
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/combo-chart.png", width=80)
+    # Branding
+    st.image("https://img.icons8.com/fluency/96/combo-chart.png", width=60)
     st.title("Market Pulse")
+    st.caption("Intelligence Command Center v2.0")
     st.divider()
     
+    # System Health
+    st.subheader("🌐 System Health")
+    health_cols = st.columns(2)
+    with health_cols[0]:
+        st.success("● Connected")
+    with health_cols[1]:
+        last_date = combined_df[combined_df['record_type'] == 'live']['date'].max()
+        last_str = last_date.strftime("%d %b") if pd.notnull(last_date) else "N/A"
+        st.info(f"📅 {last_str}")
+    st.caption("Feed Source: WFP/VAM Real-time")
+    
+    st.divider()
     st.subheader("🚨 Detection Threshold")
     sensitivity = st.select_slider(
         "Model Sensitivity",

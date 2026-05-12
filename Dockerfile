@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY app.py .
+COPY 📈_Market_Intelligence.py .
 COPY src/ ./src/
 COPY pages/ ./pages/
 COPY outputs/ ./outputs/
@@ -35,4 +35,4 @@ EXPOSE 8080
 HEALTHCHECK CMD curl --fail http://localhost:${PORT:-8501}/_stcore/health
 
 # Run Streamlit
-CMD ["bash", "-lc", "streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0"]
+CMD ["bash", "-lc", "streamlit run 📈_Market_Intelligence.py --server.port=${PORT:-8501} --server.address=0.0.0.0"]

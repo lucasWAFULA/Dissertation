@@ -47,7 +47,7 @@ from src.visuals import (
 )
 
 
-st.set_page_config(page_title="Anomaly Detection", page_icon=":warning:", layout="wide")
+st.set_page_config(page_title="Forensic Audit | Market Price Pulse AI", page_icon="🚨", layout="wide")
 apply_custom_theme()
 
 
@@ -67,15 +67,13 @@ if "scoring_api_base_input" not in st.session_state:
         os.environ.get("STREAMLIT_SCORING_API_URL", "").strip() or _secrets_scoring_api_url()
     )
 
-st.title("Anomaly Detection")
-st.caption(
-    "Modular data ingestion page for validating uploads, harmonizing datasets, building the feature table, and generating anomaly alerts from the deployed model."
-)
-
+st.title("🚨 Forensic Audit & Custom Ingestion")
 st.markdown(
     """
-**Pipeline flow:** Upload data -> validate structure -> harmonize formats -> build features -> score anomalies -> review alerts
-"""
+    **Forensic Audit Mode**: Use this page to upload external market data, validate custom datasets, and run ad-hoc anomaly detection. 
+    
+    *Note: For automated daily monitoring, please refer to the **Market Intelligence** dashboard. Data uploaded here is processed in isolation for forensic review.*
+    """
 )
 
 with st.expander("Supported upload templates"):
@@ -388,11 +386,45 @@ if scored_df.empty:
     st.warning("The uploaded datasets produced no scored records in the 2020 to 2040 window.")
     st.stop()
 
+st.divider()
+st.write("### 📊 Forensic Scoring Results")
 summary_cols = st.columns(4)
-summary_cols[0].metric("Scored records", f"{len(scored_df):,}")
-summary_cols[1].metric("Detected anomalies", f"{int(scored_df['pred_anomaly'].sum()):,}")
-summary_cols[2].metric("Average anomaly score", f"{float(scored_df['risk_score'].mean()):.3f}")
-summary_cols[3].metric("Commodities", f"{scored_df['commodity'].nunique():,}")
+
+with summary_cols[0]:
+    st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-label">Scored Records</div>
+            <div class="kpi-value">{len(scored_df):,}</div>
+            <div class="kpi-trend">📄 File Audit</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with summary_cols[1]:
+    st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-label">Detected Anomalies</div>
+            <div class="kpi-value">{int(scored_df['pred_anomaly'].sum()):,}</div>
+            <div class="kpi-trend trend-down">🚨 Critical Flag</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with summary_cols[2]:
+    st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-label">Avg Anomaly Score</div>
+            <div class="kpi-value">{float(scored_df['risk_score'].mean()):.3f}</div>
+            <div class="kpi-trend">🎯 Precision Score</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with summary_cols[3]:
+    st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-label">Active Commodities</div>
+            <div class="kpi-value">{scored_df['commodity'].nunique():,}</div>
+            <div class="kpi-trend">📦 Varieties</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 st.subheader("Uploaded Data Trend View")
 plotly_chart_interactive(make_price_trend_chart(scored_df))

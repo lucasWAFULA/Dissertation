@@ -12,7 +12,7 @@ This project packages the notebook-based food price anomaly detection workflow i
 
 ## Project structure
 
-- `app.py`: Streamlit entry point
+- `📈_Market_Intelligence.py`: Streamlit entry point
 - `api/`: FastAPI service (`api.main:app`) for scalable REST scoring
 - `src/data_loader.py`: loads raw datasets and deployment metadata
 - `src/preprocessing.py`: data cleaning, monthly aggregation, CPI adjustment, lag features, and anomaly labels
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 3. Start the app:
 
 ```bash
-streamlit run app.py
+streamlit run 📈_Market_Intelligence.py
 ```
 
 ## Required deployment artifacts
