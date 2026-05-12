@@ -140,3 +140,7 @@ def format_artifact_status(bundle: ArtifactBundle) -> dict[str, str]:
         "model_path": str(bundle.paths["model"]) if bundle.paths["model"] else "Not found",
     }
 
+def run_batch_inference(frame: pd.DataFrame, bundle: ArtifactBundle) -> pd.DataFrame:
+    """Convenience wrapper for scoring a batch of price records."""
+    return score_dataset(frame, bundle)
+

@@ -55,3 +55,9 @@ THRESHOLD_CANDIDATES = [
     "best_threshold.pkl",
 ]
 
+# Database Configuration
+DATABASE_URL = "sqlite:///./market_intelligence.db"
+
+# API Endpoints (WFP VAM)
+WFP_API_URL = "https://api.vam.wfp.org/8.1.0/Public/Price"
+

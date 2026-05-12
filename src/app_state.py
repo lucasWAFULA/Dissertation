@@ -144,13 +144,38 @@ def build_future_outlook_dataset() -> pd.DataFrame:
     return future_df
 
 
+from .database import load_prices_from_db
+
+@st.cache_data(show_spinner=False)
+def load_live_data_from_db() -> pd.DataFrame:
+    """Load live ingestion records from the SQL database."""
+    try:
+        live_df = load_prices_from_db(limit=5000)
+        if not live_df.empty:
+            live_df["record_type"] = "live"
+            live_df["date"] = pd.to_datetime(live_df["date"])
+            # Rename for consistency if needed
+            if "county" in live_df.columns:
+                live_df = live_df.rename(columns={"county": "COUNTY"})
+            return live_df
+        return pd.DataFrame()
+    except Exception as e:
+        st.sidebar.warning(f"Database connection offline: {e}")
+        return pd.DataFrame()
+
 @st.cache_data(show_spinner=True)
 def build_combined_dashboard_dataset() -> pd.DataFrame:
     dashboard_df = build_dashboard_dataset()
     future_df = build_future_outlook_dataset()
-    if future_df.empty:
-        return dashboard_df.copy()
-    return pd.concat([dashboard_df, future_df], ignore_index=True)
+    live_df = load_live_data_from_db()
+    
+    parts = [dashboard_df]
+    if not future_df.empty:
+        parts.append(future_df)
+    if not live_df.empty:
+        parts.append(live_df)
+        
+    return pd.concat(parts, ignore_index=True)
 
 
 def get_app_context() -> dict[str, object]:

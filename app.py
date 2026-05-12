@@ -167,6 +167,13 @@ with st.sidebar:
     )
     
     st.divider()
+    st.subheader("📡 Live Connectivity")
+    auto_refresh = st.toggle("Auto-Refresh (Live Mode)", value=False)
+    if auto_refresh:
+        from streamlit_autorefresh import st_autorefresh
+        st_autorefresh(interval=60 * 1000, key="live_refresh")
+        st.caption("✨ Intelligence feed updating every 60s")
+    
     if st.button("📥 Export Report (PDF)", use_container_width=True):
         st.toast("Generating intelligence report...")
     if st.button("📊 Download Data (CSV)", use_container_width=True):
@@ -265,6 +272,7 @@ st.markdown(
     <div style="margin-top: 1rem; color: #6B7280; font-size: 0.875rem;">
         <b>Detection Threshold:</b> <code style="background: #EEF2FF; color: #4338CA; padding: 2px 6px; border-radius: 4px;">{current_threshold}</code> | 
         <b>Historical Records:</b> <code>{pipeline_summary['rows']:,}</code> | 
+        <b>Live Intelligence Feed:</b> <code>{len(combined_df[combined_df['record_type'] == 'live']):,}</code> records |
         <b>Active View:</b> {filtered_df['commodity'].nunique()} commodities across {filtered_df['COUNTY'].nunique()} counties
     </div>
     """,
