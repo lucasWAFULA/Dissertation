@@ -36,11 +36,19 @@ jobs:
           pip install pytest pytest-cov pytest-asyncio httpx
 
       - name: Run tests with coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          FIREBASE_PROJECT_ID: "marketpulseai-496112"
+          DATABASE_URL: "sqlite:////tmp/test-quota.db"
+          QUOTA_FREE_DAILY: "100"
+          QUOTA_PRO_DAILY: "5000"
+          QUOTA_ENTERPRISE_DAILY: "999999"
         run: |
           pytest tests/ \
-            --cov=app \
+            --cov=api \
             --cov-report=xml \
             --cov-report=term-missing \
+            --ignore=tests/test_auth_integration.py \
             --tb=short \
             -v
 

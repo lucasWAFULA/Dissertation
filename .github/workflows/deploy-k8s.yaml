@@ -1,12 +1,13 @@
-name: Build → Test → Deploy to GKE
+name: Build → Test → Deploy to GKE (LEGACY - disabled)
 
+# This is the old Cloud Run workflow - superseded by deploy-production.yaml
+# Only runs manually to avoid conflicts with the new GKE pipeline
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'yes' to run legacy workflow"
+        required: true
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
