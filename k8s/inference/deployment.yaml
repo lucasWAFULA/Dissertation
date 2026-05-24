@@ -78,17 +78,8 @@ spec:
               mountPath: /app/outputs
               subPath: outputs
             - name: model-data
-              mountPath: /app/wfp_food_prices_ken (1).csv
-              subPath: wfp_food_prices_ken.csv
-              readOnly: true
-            - name: model-data
-              mountPath: /app/FPMA_international_price_data.csv
-              subPath: FPMA_international_price_data.csv
-              readOnly: true
-            - name: model-data
-              mountPath: /app/Inflation Rates.csv
-              subPath: Inflation_Rates.csv
-              readOnly: true
+              mountPath: /app/data
+              subPath: data
 
           # Liveness probe — restart pod if stuck
           livenessProbe:
