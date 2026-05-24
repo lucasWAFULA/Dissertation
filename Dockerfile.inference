@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy and install requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # ─── Stage 2: Production runtime ──────────────────────────────────────────
 FROM python:3.11-slim
@@ -21,8 +21,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+COPY --from=builder /usr/local /usr/local
 
 # Copy application source
 COPY api/          ./api/
@@ -32,14 +31,21 @@ COPY outputs/      ./outputs/
 
 # Copy data files (CSV datasets baked into image for self-contained deployment)
 # For large datasets, use PVC mounts instead and remove these lines
-COPY "wfp_food_prices_ken (1).csv" "./wfp_food_prices_ken (1).csv"
+COPY ["wfp_food_prices_ken (1).csv", "./wfp_food_prices_ken (1).csv"]
 COPY FPMA_international_price_data.csv .
-COPY "Inflation Rates.csv" "./Inflation Rates.csv"
+COPY ["Inflation Rates.csv", "./Inflation Rates.csv"]
 COPY geoBoundaries-KEN-ADM1.geojson .
 COPY geoBoundaries-KEN-ADM.geojson .
 
-# Create DB directory for SQLite
-RUN mkdir -p /app/data
+# Create a non-root user (appuser with UID 1000)
+RUN groupadd -g 1000 appuser && \
+    useradd -r -u 1000 -g appuser appuser
+
+# Create DB directory and set proper ownership of /app to appuser
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 # Environment defaults (override via K8s ConfigMap)
 ENV PYTHONUNBUFFERED=1 \
