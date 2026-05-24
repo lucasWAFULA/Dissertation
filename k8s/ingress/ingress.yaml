@@ -1,0 +1,64 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: market-pulse-ingress
+  namespace: market-pulse
+  annotations:
+    # GKE native ingress controller (HTTP(S) Load Balancer)
+    kubernetes.io/ingress.class: "gce"
+    # Reserved global static IP (created by deploy-gke.sh)
+    kubernetes.io/ingress.global-static-ip-name: "market-pulse-ip"
+    # GKE-managed TLS certificate covering all three subdomains
+    networking.gke.io/managed-certificates: "market-pulse-cert"
+    # FrontendConfig: enforce HTTPS redirect
+    networking.gke.io/v1beta1.FrontendConfig: "market-pulse-frontend-config"
+    # BackendConfig: Cloud Armor WAF + connection draining + health checks
+    cloud.google.com/backend-config: '{"default": "market-pulse-backend-config"}'
+spec:
+  rules:
+    # ── App (React SPA) ──────────────────────────────────────────────────────
+    - host: app.marketpulse.services
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 3000
+
+    # ── API (Python inference) ───────────────────────────────────────────────
+    - host: api.marketpulse.services
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: inference-svc
+                port:
+                  number: 8000
+
+    # ── Admin / Grafana (React SPA handles /grafana prefix) ──────────────────
+    - host: admin.marketpulse.services
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 3000
+---
+# FrontendConfig: force HTTPS for all hosts
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: market-pulse-frontend-config
+  namespace: market-pulse
+spec:
+  redirectToHttps:
+    enabled: true
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT

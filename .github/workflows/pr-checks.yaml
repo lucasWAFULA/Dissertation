@@ -1,0 +1,102 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 1: Python tests
+  # ────────────────────────────────────────────────────────────────────────────
+  test-python:
+    name: 🧪 Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio httpx
+
+      - name: Run pytest
+        run: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=term-missing \
+            --tb=short \
+            -v
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 2: Docker build check (no push)
+  # ────────────────────────────────────────────────────────────────────────────
+  build-check:
+    name: 🐳 Docker Build Check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: inference
+            context: .
+            dockerfile: Dockerfile
+          - name: frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.name }} image (no push)
+        run: |
+          docker build \
+            --file ${{ matrix.dockerfile }} \
+            --tag market-pulse/${{ matrix.name }}:pr-${{ github.event.pull_request.number }} \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            ${{ matrix.context }}
+        env:
+          DOCKER_BUILDKIT: "1"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 3: Python formatting & lint check
+  # ────────────────────────────────────────────────────────────────────────────
+  lint:
+    name: 🎨 Python Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linting tools
+        run: pip install ruff black isort
+
+      - name: Run ruff (fast linter)
+        run: ruff check . --select=E,W,F,I --ignore=E501 || true
+
+      - name: Check black formatting
+        run: black --check --diff . --line-length=100 || true
+
+      - name: Check import sorting
+        run: isort --check-only --diff . || true
+
+      - name: PR comment on lint failures
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Lint check found issues.** Run `black .` and `isort .` locally before merging.'
+            })

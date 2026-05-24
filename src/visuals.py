@@ -74,12 +74,22 @@ def enrich_dashboard_frame(frame: pd.DataFrame) -> pd.DataFrame:
         * 100
     ).fillna(0)
 
+    is_anomaly = enriched["pred_anomaly"] == 1 if "pred_anomaly" in enriched.columns else (enriched["risk_score"] >= 0.979)
     severity = np.select(
-        [enriched["risk_score"] >= 0.75, enriched["risk_score"] >= 0.40],
+        [
+            is_anomaly & ((enriched["risk_score"] >= 0.99) | (enriched["price_spike_pct"] >= 20.0)),
+            is_anomaly,
+        ],
         ["High", "Medium"],
         default="Low",
     )
     enriched["severity"] = pd.Categorical(severity, categories=SEVERITY_ORDER, ordered=True)
+    
+    if "market" not in enriched.columns:
+        enriched["market"] = "County-level Average"
+    else:
+        enriched["market"] = enriched["market"].fillna("County-level Average")
+        
     return enriched
 
 

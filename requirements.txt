@@ -16,3 +16,9 @@ python-multipart>=0.0.6
 httpx>=0.26.0
 streamlit-autorefresh>=0.0.1
 SQLAlchemy>=2.0.0
+
+# Authentication + quota (GKE production)
+firebase-admin>=6.0.0
+
+# Observability — exposes /metrics endpoint for Prometheus scraping
+prometheus-fastapi-instrumentator>=6.1.0

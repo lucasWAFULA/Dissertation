@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: market-pulse
+  labels:
+    app: market-price-pulse-ai
+    environment: production

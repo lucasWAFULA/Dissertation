@@ -1,0 +1,10 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: market-pulse-cert
+  namespace: market-pulse
+spec:
+  domains:
+    - app.marketpulse.services
+    - api.marketpulse.services
+    - admin.marketpulse.services

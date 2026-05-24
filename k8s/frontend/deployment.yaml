@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: market-pulse
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      terminationGracePeriodSeconds: 15
+      containers:
+        - name: frontend
+          image: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+
+          # Security context — run as non-root
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+
+          env:
+            - name: PORT
+              value: "3000"
+            # Express proxies /api/* to this URL inside the cluster
+            - name: API_BASE_URL
+              value: "http://inference-svc:8000"
+
+            # ----- Firebase build-time / public config (baked into image) -----
+            - name: VITE_FIREBASE_PROJECT_ID
+              value: "marketpulseai-496112"
+            - name: VITE_FIREBASE_AUTH_DOMAIN
+              value: "marketpulseai-496112.firebaseapp.com"
+            - name: VITE_API_BASE_URL
+              value: "https://api.marketpulse.services"
+
+            # ----- Sensitive Firebase vars (from Kubernetes Secret) -----
+            - name: VITE_FIREBASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-secret
+                  key: web-api-key
+            - name: VITE_FIREBASE_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-secret
+                  key: app-id
+            - name: VITE_FIREBASE_MESSAGING_SENDER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-secret
+                  key: messaging-sender-id
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10

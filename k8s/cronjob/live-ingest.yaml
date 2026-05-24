@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: live-ingest
+  namespace: market-pulse
+  labels:
+    app: live-ingest
+spec:
+  # Run every 6 hours: sync WFP VAM live price data
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid          # Never run two ingest jobs in parallel
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 300       # Skip if delayed > 5 minutes
+
+  jobTemplate:
+    spec:
+      backoffLimit: 2                # Retry up to 2 times on failure
+      activeDeadlineSeconds: 600     # Kill job if it runs > 10 minutes
+      template:
+        metadata:
+          labels:
+            app: live-ingest
+        spec:
+          restartPolicy: OnFailure
+
+          containers:
+            - name: live-ingest
+              image: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/inference:latest
+              imagePullPolicy: Always
+              command: ["python", "-m", "scripts.live_ingest"]
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+
+              envFrom:
+                - configMapRef:
+                    name: inference-config
+
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+
+              volumeMounts:
+                - name: model-data
+                  mountPath: /app/outputs
+                  subPath: outputs
+
+          volumes:
+            - name: model-data
+              persistentVolumeClaim:
+                claimName: model-data-pvc

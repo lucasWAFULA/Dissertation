@@ -1,0 +1,75 @@
+# NOTE: Cloud Armor SecurityPolicy is managed via gcloud CLI (not kubectl).
+# This file documents the intended WAF policy configuration.
+# The policy is created by deploy-gke.sh — see that script for live commands.
+#
+# Policy name: market-pulse-waf-policy
+# Project:     marketpulseai-496112
+#
+# Rules (evaluated in priority order, lower number = higher priority):
+#
+#  Priority | Action  | Description
+#  ---------|---------|----------------------------------------------------
+#  1000     | deny    | SQLi preconfigured rule (sqli-stable, paranoia 1)
+#  1001     | deny    | XSS  preconfigured rule (xss-stable,  paranoia 1)
+#  2000     | rate    | 100 req/min per IP — throttle; ban IP for 60s
+#  9999     | allow   | Default: permit all other traffic
+#
+# ────────────────────────────────────────────────────────────────────────────
+# gcloud commands to CREATE the policy (also in deploy-gke.sh):
+# ────────────────────────────────────────────────────────────────────────────
+
+# 1. Create the base policy (with default ALLOW action)
+gcloud compute security-policies create market-pulse-waf-policy \
+  --description="Cloud Armor WAF for Market Pulse AI" \
+  --project=marketpulseai-496112
+
+# 2. Enable OWASP SQLi ModSecurity pre-configured rule (paranoia level 1)
+gcloud compute security-policies rules create 1000 \
+  --security-policy=market-pulse-waf-policy \
+  --expression="evaluatePreconfiguredExpr('sqli-stable',{'sensitivity': 1})" \
+  --action=deny-403 \
+  --description="Block SQL injection attempts" \
+  --project=marketpulseai-496112
+
+# 3. Enable OWASP XSS ModSecurity pre-configured rule (paranoia level 1)
+gcloud compute security-policies rules create 1001 \
+  --security-policy=market-pulse-waf-policy \
+  --expression="evaluatePreconfiguredExpr('xss-stable',{'sensitivity': 1})" \
+  --action=deny-403 \
+  --description="Block cross-site scripting attempts" \
+  --project=marketpulseai-496112
+
+# 4. Rate limit: 100 requests per minute per IP; ban offender for 60 seconds
+gcloud compute security-policies rules create 2000 \
+  --security-policy=market-pulse-waf-policy \
+  --expression="true" \
+  --action=rate-based-ban \
+  --rate-limit-threshold-count=100 \
+  --rate-limit-threshold-interval-sec=60 \
+  --ban-duration-sec=60 \
+  --conform-action=allow \
+  --exceed-action=deny-429 \
+  --enforce-on-key=IP \
+  --description="Rate-limit: 100 req/min per IP, ban 60s on breach" \
+  --project=marketpulseai-496112
+
+# 5. (Optional) Block Tor exit-node range example — add real CIDRs as needed
+# gcloud compute security-policies rules create 500 \
+#   --security-policy=market-pulse-waf-policy \
+#   --src-ip-ranges="198.51.100.0/24" \
+#   --action=deny-403 \
+#   --description="Block known bad IP ranges" \
+#   --project=marketpulseai-496112
+
+# 6. Default rule (priority 2147483647) is already ALLOW; verify with:
+gcloud compute security-policies describe market-pulse-waf-policy \
+  --project=marketpulseai-496112
+
+# ────────────────────────────────────────────────────────────────────────────
+# Attaching the policy to a backend service (done automatically via BackendConfig)
+# but can also be done manually:
+# ────────────────────────────────────────────────────────────────────────────
+# gcloud compute backend-services update <BACKEND_SERVICE_NAME> \
+#   --security-policy=market-pulse-waf-policy \
+#   --global \
+#   --project=marketpulseai-496112

@@ -1,1 +1,1 @@
-{"best_model":"Logistic Regression","optimal_threshold":0.9882509762,"needs_scaling":true,"F1":0.8338206931,"Recall":0.8332504352,"AUC":0.9159530397}
+{"best_model":"Logistic Regression","optimal_threshold":0.9797924608,"needs_scaling":true,"F1":0.8412940173,"Recall":0.8587686567,"AUC":0.9183673882}

@@ -1,0 +1,30 @@
+/* MarketIntelligence Page */
+.mi-page {
+  max-width: 1400px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.page-header .page-title { flex: 1; min-width: 200px; }
+.page-header .page-subtitle { flex-basis: 100%; margin-bottom: 0; }
+.page-header .btn { margin-left: auto; margin-top: 4px; }
+
+.pipeline-info {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+}

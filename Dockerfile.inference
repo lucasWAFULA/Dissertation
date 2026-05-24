@@ -1,0 +1,58 @@
+# Market Price Pulse AI - Inference Service
+# Multi-stage build for minimal image size
+
+# ─── Stage 1: Python dependency builder ───────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Install build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ─── Stage 2: Production runtime ──────────────────────────────────────────
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+
+# Copy application source
+COPY api/          ./api/
+COPY src/          ./src/
+COPY scripts/      ./scripts/
+COPY outputs/      ./outputs/
+
+# Copy data files (CSV datasets baked into image for self-contained deployment)
+# For large datasets, use PVC mounts instead and remove these lines
+COPY "wfp_food_prices_ken (1).csv" "./wfp_food_prices_ken (1).csv"
+COPY FPMA_international_price_data.csv .
+COPY "Inflation Rates.csv" "./Inflation Rates.csv"
+COPY geoBoundaries-KEN-ADM1.geojson .
+COPY geoBoundaries-KEN-ADM.geojson .
+
+# Create DB directory for SQLite
+RUN mkdir -p /app/data
+
+# Environment defaults (override via K8s ConfigMap)
+ENV PYTHONUNBUFFERED=1 \
+    LOG_LEVEL=INFO \
+    API_MAX_SCORE_ROWS=50000 \
+    ENSEMBLE_LR_WEIGHT=0.6 \
+    PORT=8000
+
+EXPOSE 8000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+
+# Production: 4 uvicorn workers
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

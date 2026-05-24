@@ -14,7 +14,7 @@ from src.inference import run_batch_inference, load_artifacts
 
 def simulate_wfp_api_fetch():
     """Simulate fetching the latest prices from WFP API."""
-    print("📡 Fetching latest data from WFP VAM API...")
+    print("INFO: Fetching latest data from WFP VAM API...")
     
     # Create mock data for the last 7 days
     dates = [datetime.now() - timedelta(days=i) for i in range(7)]
@@ -44,7 +44,7 @@ def main():
     new_data = simulate_wfp_api_fetch()
     
     # 2. Run Inference
-    print("🧠 Running anomaly detection inference...")
+    print("INFO: Running anomaly detection inference...")
     try:
         # Load real artifacts
         bundle = load_artifacts()
@@ -64,20 +64,24 @@ def main():
             new_data["is_anomaly"] = 0
             
     except Exception as e:
-        print(f"⚠️ Inference warning: {e}. Using baseline scores.")
+        print(f"WARNING: Inference warning: {e}. Using baseline scores.")
         new_data["risk_score"] = 0.1
         new_data["is_anomaly"] = 0
 
+    is_anomaly = new_data["is_anomaly"] == 1
     new_data["severity"] = np.select(
-        [new_data["risk_score"] >= 0.75, new_data["risk_score"] >= 0.40],
+        [
+            is_anomaly & (new_data["risk_score"] >= 0.99),
+            is_anomaly,
+        ],
         ["High", "Medium"],
         default="Low"
     )
     
     # 3. Save to DB
-    print(f"💾 Saving {len(new_data)} records to database...")
+    print(f"INFO: Saving {len(new_data)} records to database...")
     save_prices_to_db(new_data)
-    print("✅ Ingestion complete.")
+    print("SUCCESS: Ingestion complete.")
 
 if __name__ == "__main__":
     main()

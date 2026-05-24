@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference
+  namespace: market-pulse
+  labels:
+    app: inference
+    version: v2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inference
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0   # Zero-downtime rolling updates
+  template:
+    metadata:
+      labels:
+        app: inference
+        version: v2
+    spec:
+      # Graceful shutdown: finish in-flight requests before stopping
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: inference
+          # Image is pushed by CI/CD pipeline
+          image: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/inference:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+
+          # Security context — run as non-root
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+
+          # Environment from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: inference-config
+
+          # Additional environment variables from Secrets
+          env:
+            - name: FIREBASE_CREDENTIALS_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-secret
+                  key: credentials-json
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: sentry-dsn
+                  optional: true
+            - name: FIREBASE_PROJECT_ID
+              value: "marketpulseai-496112"
+            - name: DATABASE_URL
+              value: "sqlite:////app/data/usage.db"
+
+          # Resource limits (GKE Autopilot / n1-standard-2)
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+
+          # Mount model artifacts + data from PVC
+          volumeMounts:
+            - name: model-data
+              mountPath: /app/outputs
+              subPath: outputs
+            - name: model-data
+              mountPath: /app/wfp_food_prices_ken (1).csv
+              subPath: wfp_food_prices_ken.csv
+              readOnly: true
+            - name: model-data
+              mountPath: /app/FPMA_international_price_data.csv
+              subPath: FPMA_international_price_data.csv
+              readOnly: true
+            - name: model-data
+              mountPath: /app/Inflation Rates.csv
+              subPath: Inflation_Rates.csv
+              readOnly: true
+
+          # Liveness probe — restart pod if stuck
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+
+          # Readiness probe — only route traffic when models are loaded
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+
+      volumes:
+        - name: model-data
+          persistentVolumeClaim:
+            claimName: model-data-pvc

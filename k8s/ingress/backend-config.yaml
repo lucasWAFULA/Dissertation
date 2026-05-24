@@ -1,0 +1,31 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: market-pulse-backend-config
+  namespace: market-pulse
+spec:
+  # Timeout for backend responses (ML inference can be slow)
+  timeoutSec: 120
+
+  # Drain existing connections gracefully on pod termination
+  connectionDraining:
+    drainingTimeoutSec: 60
+
+  # Custom health check pointing at the inference /health endpoint
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 10
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /health
+    port: 8000
+
+  # Cloud Armor WAF policy (created by deploy-gke.sh)
+  securityPolicy:
+    name: market-pulse-waf-policy
+
+  # Full access log sampling for Cloud Logging / Cloud Armor audit
+  logging:
+    enable: true
+    sampleRate: 1.0

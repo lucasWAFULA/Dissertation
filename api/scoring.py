@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from src.data_loader import REQUIRED_WFP_COLUMNS, standardize_wfp_data
-from src.inference import ArtifactBundle, score_dataset
+from src.inference import ArtifactBundle, EnsembleBundle, score_dataset, score_ensemble
 from src.preprocessing import build_feature_dataset
 from src.visuals import enrich_dashboard_frame
 
@@ -44,6 +44,29 @@ def score_wfp_dataframe(
     return enrich_dashboard_frame(scored)
 
 
+def score_wfp_dataframe_ensemble(
+    df: pd.DataFrame,
+    *,
+    ensemble: EnsembleBundle,
+    fpma: pd.DataFrame,
+    inflation: pd.DataFrame,
+    feature_names: list[str],
+) -> pd.DataFrame:
+    """Run the LR + XGB weighted ensemble on WFP-style CSV/JSON rows."""
+    standardized = standardize_wfp_data(df)
+    if standardized.empty:
+        return pd.DataFrame()
+    feature_df = build_feature_dataset(
+        wfp=standardized,
+        fpma=fpma,
+        inflation=inflation,
+        feature_names=feature_names,
+        climate_tables=None,
+    )
+    scored = score_ensemble(feature_df, ensemble)
+    return enrich_dashboard_frame(scored)
+
+
 def scored_to_json_rows(df: pd.DataFrame) -> list[dict[str, Any]]:
     if df.empty:
         return []
@@ -60,6 +83,10 @@ def scored_to_json_rows(df: pd.DataFrame) -> list[dict[str, Any]]:
         "price_real",
         "expected_price",
         "prob_anomaly",
+        "prob_lr",
+        "prob_xgb",
+        "prob_ensemble",
+        "model_agreement",
         "pred_anomaly",
         "prediction_source",
         "severity",
@@ -72,4 +99,6 @@ def scored_to_json_rows(df: pd.DataFrame) -> list[dict[str, Any]]:
         for k, v in list(r.items()):
             if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
                 r[k] = None
+            elif isinstance(v, np.bool_):
+                r[k] = bool(v)
     return rows

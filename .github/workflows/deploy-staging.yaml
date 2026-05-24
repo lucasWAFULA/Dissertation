@@ -1,0 +1,250 @@
+name: Staging Deploy → GKE
+
+on:
+  push:
+    branches: [develop]
+
+env:
+  GCP_PROJECT_ID: marketpulseai-496112
+  GKE_REGION: us-central1
+  GKE_CLUSTER: market-pulse-cluster
+  AR_REGISTRY: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse
+  INFERENCE_IMAGE: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/inference
+  FRONTEND_IMAGE: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/frontend
+  K8S_NAMESPACE: staging
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 1: Python tests
+  # ────────────────────────────────────────────────────────────────────────────
+  test-python:
+    name: 🧪 Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio httpx
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=term-missing \
+            --tb=short \
+            -v
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 2: Frontend build validation
+  # ────────────────────────────────────────────────────────────────────────────
+  lint-frontend:
+    name: 🔨 Frontend Build Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend (staging API URL)
+        env:
+          VITE_FIREBASE_PROJECT_ID: marketpulseai-496112
+          VITE_FIREBASE_AUTH_DOMAIN: marketpulseai-496112.firebaseapp.com
+          VITE_API_BASE_URL: https://api-staging.marketpulse.services
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+        run: npm run build
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 3: Build and push Docker images (staging tags)
+  # ────────────────────────────────────────────────────────────────────────────
+  build-images:
+    name: 🐳 Build & Push Staging Images
+    runs-on: ubuntu-latest
+    needs: [test-python, lint-frontend]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Set image tag
+        id: meta
+        run: echo "tag=staging-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build inference image
+        run: |
+          docker build \
+            --tag ${{ env.INFERENCE_IMAGE }}:${{ steps.meta.outputs.tag }} \
+            --tag ${{ env.INFERENCE_IMAGE }}:staging-latest \
+            --cache-from ${{ env.INFERENCE_IMAGE }}:staging-latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            .
+        env:
+          DOCKER_BUILDKIT: "1"
+
+      - name: Push inference image
+        run: |
+          docker push ${{ env.INFERENCE_IMAGE }}:${{ steps.meta.outputs.tag }}
+          docker push ${{ env.INFERENCE_IMAGE }}:staging-latest
+
+      - name: Build frontend image (staging API)
+        run: |
+          docker build \
+            --tag ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.tag }} \
+            --tag ${{ env.FRONTEND_IMAGE }}:staging-latest \
+            --cache-from ${{ env.FRONTEND_IMAGE }}:staging-latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --build-arg VITE_FIREBASE_PROJECT_ID=marketpulseai-496112 \
+            --build-arg VITE_FIREBASE_AUTH_DOMAIN=marketpulseai-496112.firebaseapp.com \
+            --build-arg VITE_API_BASE_URL=https://api-staging.marketpulse.services \
+            --build-arg VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }} \
+            --build-arg VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }} \
+            --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }} \
+            ./frontend
+        env:
+          DOCKER_BUILDKIT: "1"
+
+      - name: Push frontend image
+        run: |
+          docker push ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.tag }}
+          docker push ${{ env.FRONTEND_IMAGE }}:staging-latest
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 4: Deploy to staging namespace
+  # ────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-images
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_REGION }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Ensure staging namespace exists
+        run: |
+          kubectl create namespace staging --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Patch inference image (staging)
+        run: |
+          kubectl set image deployment/inference \
+            inference=${{ env.INFERENCE_IMAGE }}:${{ needs.build-images.outputs.image-tag }} \
+            -n ${{ env.K8S_NAMESPACE }} || \
+          kubectl apply -f k8s/inference/deployment.yaml -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Patch frontend image (staging)
+        run: |
+          kubectl set image deployment/frontend \
+            frontend=${{ env.FRONTEND_IMAGE }}:${{ needs.build-images.outputs.image-tag }} \
+            -n ${{ env.K8S_NAMESPACE }} || \
+          kubectl apply -f k8s/frontend/deployment.yaml -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Apply configmaps
+        run: |
+          kubectl apply -f k8s/inference/configmap.yaml -n ${{ env.K8S_NAMESPACE }} || true
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/inference \
+            -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+          kubectl rollout status deployment/frontend \
+            -n ${{ env.K8S_NAMESPACE }} --timeout=180s
+        continue-on-error: true
+        id: rollout
+
+      - name: Rollback on failure
+        if: steps.rollout.outcome == 'failure'
+        run: |
+          kubectl rollout undo deployment/inference -n ${{ env.K8S_NAMESPACE }} || true
+          kubectl rollout undo deployment/frontend  -n ${{ env.K8S_NAMESPACE }} || true
+          exit 1
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 5: Verify staging deployment
+  # ────────────────────────────────────────────────────────────────────────────
+  verify:
+    name: ✅ Verify Staging
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for load balancer
+        run: sleep 20
+
+      - name: Health check — staging API
+        run: |
+          for i in {1..5}; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 30 \
+              https://api-staging.marketpulse.services/health || echo "000")
+            echo "Attempt $i: HTTP $HTTP_STATUS"
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Staging API health check passed"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "⚠️ Staging health check did not pass — check if staging ingress/DNS is configured"
+          exit 0   # Non-fatal for staging
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 6: Summary
+  # ────────────────────────────────────────────────────────────────────────────
+  notify:
+    name: 📣 Staging Summary
+    runs-on: ubuntu-latest
+    needs: [deploy, verify]
+    if: always()
+    steps:
+      - name: Write GitHub Step Summary
+        run: |
+          echo "## 🧪 Market Pulse AI — Staging Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Attribute | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`develop\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Namespace** | staging |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Deploy** | ${{ needs.deploy.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Staging Endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "- API: https://api-staging.marketpulse.services/health" >> $GITHUB_STEP_SUMMARY
+          echo "- Docs: https://api-staging.marketpulse.services/docs" >> $GITHUB_STEP_SUMMARY

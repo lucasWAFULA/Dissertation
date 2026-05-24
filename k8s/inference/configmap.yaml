@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inference-config
+  namespace: market-pulse
+data:
+  # Weighted ensemble: LR=60%, XGB=40%
+  ENSEMBLE_LR_WEIGHT: "0.6"
+  ENSEMBLE_STRATEGY: "weighted"
+  # CORS: allow React frontend + admin origins only
+  CORS_ORIGINS: "https://app.marketpulse.services,https://admin.marketpulse.services"
+  # Scoring limits
+  API_MAX_SCORE_ROWS: "50000"
+  # Logging
+  LOG_LEVEL: "INFO"
+  PYTHONUNBUFFERED: "1"
+  # Firebase / GCP
+  FIREBASE_PROJECT_ID: "marketpulseai-496112"
+  GCP_PROJECT_ID: "marketpulseai-496112"
+  # API Quota tiers (requests per day per user tier)
+  QUOTA_FREE_DAILY: "100"
+  QUOTA_PRO_DAILY: "5000"
+  QUOTA_ENTERPRISE_DAILY: "999999"
