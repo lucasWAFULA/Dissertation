@@ -57,3 +57,27 @@ Thumbs.db
 
 # Streamlit
 .streamlit/
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+dist/
+.npm
+
+# GCP Service Account key — NEVER commit this
+github-actions-key.json
+*-service-account.json
+*-sa-key.json
+
+# Temporary Office lock files
+~$*
+
+# SQLite databases (runtime state)
+*.db
+market_intelligence.db
+
+# Local env overrides
+.env.local
+.env.production.local
