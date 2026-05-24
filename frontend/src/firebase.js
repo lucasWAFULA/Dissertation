@@ -20,40 +20,85 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+export const isFirebaseConfigured = !!(firebaseConfig.apiKey && firebaseConfig.appId);
 
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+let app = null;
+let auth = null;
+let googleProvider = null;
 
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+  } catch (err) {
+    console.error('[Firebase] Initialization failed:', err);
+  }
+} else {
+  console.warn(
+    '[Firebase] Missing VITE_FIREBASE_API_KEY or VITE_FIREBASE_APP_ID. ' +
+    'Local development will run in offline mode. Please create a .env.local ' +
+    'file in the /frontend folder containing your Firebase configuration to enable authentication.'
+  );
+}
 
 // ── Helper functions ──────────────────────────────────────────────────────────
 
 /** Sign in with Google popup */
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+export const signInWithGoogle = () => {
+  if (!isFirebaseConfigured) {
+    alert('Google authentication is offline (missing Firebase config).');
+    return Promise.reject(new Error('Firebase not configured'));
+  }
+  return signInWithPopup(auth, googleProvider);
+};
 
 /** Sign in with email + password */
-export const signInWithEmail = (email, password) =>
-  signInWithEmailAndPassword(auth, email, password);
+export const signInWithEmail = (email, password) => {
+  if (!isFirebaseConfigured) {
+    alert('Email authentication is offline (missing Firebase config).');
+    return Promise.reject(new Error('Firebase not configured'));
+  }
+  return signInWithEmailAndPassword(auth, email, password);
+};
 
 /** Register a new user with email + password and send verification email */
 export const registerWithEmail = async (email, password) => {
+  if (!isFirebaseConfigured) {
+    alert('Registration is offline (missing Firebase config).');
+    return Promise.reject(new Error('Firebase not configured'));
+  }
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   await sendEmailVerification(credential.user);
   return credential;
 };
 
 /** Send a password-reset email */
-export const sendPasswordReset = (email) =>
-  sendPasswordResetEmail(auth, email);
+export const sendPasswordReset = (email) => {
+  if (!isFirebaseConfigured) {
+    alert('Password reset is offline (missing Firebase config).');
+    return Promise.reject(new Error('Firebase not configured'));
+  }
+  return sendPasswordResetEmail(auth, email);
+};
 
 /** Resend email verification to the currently signed-in user */
-export const resendVerification = () =>
-  sendEmailVerification(auth.currentUser);
+export const resendVerification = () => {
+  if (!isFirebaseConfigured || !auth?.currentUser) return Promise.resolve();
+  return sendEmailVerification(auth.currentUser);
+};
 
 /** Sign out */
-export const logOut = () => signOut(auth);
+export const logOut = () => {
+  if (!isFirebaseConfigured) return Promise.resolve();
+  return signOut(auth);
+};
 
 /** Get the current user's ID token (force-refresh optional) */
-export const getIdToken = (forceRefresh = false) =>
-  auth.currentUser ? auth.currentUser.getIdToken(forceRefresh) : Promise.resolve(null);
+export const getIdToken = (forceRefresh = false) => {
+  if (!isFirebaseConfigured || !auth?.currentUser) return Promise.resolve(null);
+  return auth.currentUser.getIdToken(forceRefresh);
+};
+
+export { auth, googleProvider };

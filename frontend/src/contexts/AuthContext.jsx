@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import axios from 'axios';
-import { auth } from '../firebase';
+import { auth, isFirebaseConfigured } from '../firebase';
 
 // ── Axios base URL ─────────────────────────────────────────────────────────────
 axios.defaults.baseURL =
@@ -64,6 +64,11 @@ export const AuthProvider = ({ children }) => {
 
   // ── Firebase auth state listener ──────────────────────────────────────────
   useEffect(() => {
+    if (!isFirebaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       await refreshToken(firebaseUser);
@@ -72,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => {
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
       if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
