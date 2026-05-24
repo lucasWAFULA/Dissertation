@@ -119,6 +119,7 @@ jobs:
       - name: Build inference image
         run: |
           docker build \
+            -f Dockerfile.inference \
             --tag ${{ env.INFERENCE_IMAGE }}:${{ steps.meta.outputs.tag }} \
             --tag ${{ env.INFERENCE_IMAGE }}:latest \
             --cache-from ${{ env.INFERENCE_IMAGE }}:latest \
