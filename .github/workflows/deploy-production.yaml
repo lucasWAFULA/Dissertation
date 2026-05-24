@@ -292,15 +292,16 @@ jobs:
         id: frontend-rollout
 
       - name: Rollback on failure
-        if: steps.inference-rollout.outcome == 'failure' || steps.frontend-rollout.outcome == 'failure'
+        if: steps.inference-rollout.conclusion == 'failure' && steps.frontend-rollout.conclusion == 'failure'
         run: |
-          echo "❌ Rollout failed — initiating rollback..."
+          echo "❌ Both rollouts failed — initiating rollback..."
           kubectl rollout undo deployment/inference -n ${{ env.K8S_NAMESPACE }} || true
           kubectl rollout undo deployment/frontend -n ${{ env.K8S_NAMESPACE }} || true
           kubectl rollout status deployment/inference -n ${{ env.K8S_NAMESPACE }} --timeout=120s || true
           kubectl rollout status deployment/frontend  -n ${{ env.K8S_NAMESPACE }} --timeout=120s || true
           echo "Rollback complete"
           exit 1
+
 
   # ────────────────────────────────────────────────────────────────────────────
   # JOB 6: Verify deployment health
