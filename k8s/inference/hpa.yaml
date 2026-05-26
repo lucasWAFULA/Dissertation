@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: inference
   minReplicas: 2    # Always 2 for high availability
-  maxReplicas: 10   # Scale up to 10 under load
+  maxReplicas: 4    # Bound maximum replicas to prevent node scheduling conflicts
   metrics:
     - type: Resource
       resource:
@@ -17,19 +17,13 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70    # Scale when CPU > 70%
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80    # Scale when memory > 80%
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 60    # Wait 1 min before scaling up
       policies:
         - type: Pods
-          value: 2
-          periodSeconds: 60             # Add max 2 pods per minute
+          value: 1
+          periodSeconds: 60             # Add max 1 pod per minute
     scaleDown:
       stabilizationWindowSeconds: 300   # Wait 5 min before scaling down
       policies:

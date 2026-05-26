@@ -9,7 +9,7 @@ metadata:
     # Reserved global static IP (created by deploy-gke.sh)
     kubernetes.io/ingress.global-static-ip-name: "market-pulse-ip"
     # GKE-managed TLS certificate covering all three subdomains
-    networking.gke.io/managed-certificates: "market-pulse-cert"
+    networking.gke.io/managed-certificates: "market-pulse-cert-v2"
     # FrontendConfig: enforce HTTPS redirect
     networking.gke.io/v1beta1.FrontendConfig: "market-pulse-frontend-config"
     # BackendConfig: Cloud Armor WAF + connection draining + health checks
@@ -52,7 +52,7 @@ spec:
                 port:
                   number: 3000
 ---
-# FrontendConfig: force HTTPS for all hosts
+# FrontendConfig: force HTTPS for all hosts (Temporarily disabled to break the ACME validation deadlock)
 apiVersion: networking.gke.io/v1beta1
 kind: FrontendConfig
 metadata:
@@ -60,5 +60,5 @@ metadata:
   namespace: market-pulse
 spec:
   redirectToHttps:
-    enabled: true
+    enabled: false
     responseCodeName: MOVED_PERMANENTLY_DEFAULT

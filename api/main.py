@@ -135,6 +135,9 @@ app.include_router(data_router)
 
 # Mount admin router (all routes require admin Firebase custom claim)
 app.include_router(admin_router)
+# Mount payments router
+from api.payments import router as payments_router
+app.include_router(payments_router, prefix="/payments")
 
 # CORS
 _origins_raw = os.environ.get("CORS_ORIGINS", "*").strip()
