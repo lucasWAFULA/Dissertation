@@ -25,6 +25,10 @@ spec:
       # Graceful shutdown: finish in-flight requests before stopping
       terminationGracePeriodSeconds: 30
 
+      # Set volume ownership to group 1000 to enable SQLite writes
+      securityContext:
+        fsGroup: 1000
+
       containers:
         - name: inference
           # Image is pushed by CI/CD pipeline
