@@ -12,6 +12,7 @@ env:
   INFERENCE_IMAGE: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/inference
   FRONTEND_IMAGE: us-central1-docker.pkg.dev/marketpulseai-496112/market-pulse/frontend
   K8S_NAMESPACE: market-pulse
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # ────────────────────────────────────────────────────────────────────────────
