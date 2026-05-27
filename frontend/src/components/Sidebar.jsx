@@ -4,9 +4,9 @@ import { getEnsembleInfo } from '../api/client';
 import './Sidebar.css';
 
 const NAV_ITEMS = [
-  { to: '/',               label: 'Market Intelligence', icon: '📊' },
-  { to: '/forensic',       label: 'Forensic Audit',      icon: '🔍' },
-  { to: '/explainability', label: 'Explainability',      icon: '🧠' },
+  { to: '/app',               label: 'Market Intelligence', icon: '📊' },
+  { to: '/app/forensic',       label: 'Forensic Audit',      icon: '🔍' },
+  { to: '/app/explainability', label: 'Explainability',      icon: '🧠' },
 ];
 
 export default function Sidebar({
@@ -18,6 +18,7 @@ export default function Sidebar({
   dateRange,
   ensembleWeights = { lr: 60, xgb: 40, iforest: 0, lgbm: 0 },
   onWeightChange,
+  onCloseSidebar,
 }) {
   const [models, setModels]   = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,23 +33,25 @@ export default function Sidebar({
   const SEVERITIES = ['All', 'High', 'Medium', 'Low'];
 
   return (
-    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* ── Nav Links ── */}
-      <nav className="sidebar-nav">
-        {NAV_ITEMS.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
-            }
-          >
-            <span className="sidebar-link-icon">{icon}</span>
-            {!collapsed && <span className="sidebar-link-label">{label}</span>}
-          </NavLink>
-        ))}
-      </nav>
+    <>
+      {!collapsed && <div className="sidebar-backdrop" onClick={onCloseSidebar} />}
+      <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+        {/* ── Nav Links ── */}
+        <nav className="sidebar-nav">
+          {NAV_ITEMS.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/app'}
+              className={({ isActive }) =>
+                `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
+              }
+            >
+              <span className="sidebar-link-icon">{icon}</span>
+              {!collapsed && <span className="sidebar-link-label">{label}</span>}
+            </NavLink>
+          ))}
+        </nav>
 
       <div className="sidebar-divider" />
 
@@ -228,5 +231,6 @@ export default function Sidebar({
         </div>
       )}
     </aside>
+    </>
   );
 }

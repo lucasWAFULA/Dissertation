@@ -331,11 +331,44 @@
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sidebar-width) !important;
     transform: translateX(-100%);
     z-index: 950;
+    box-shadow: none;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .sidebar:not(.sidebar-collapsed) {
     transform: translateX(0);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
   }
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 14, 26, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 940;
+    animation: fade-in 0.25s ease-out;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

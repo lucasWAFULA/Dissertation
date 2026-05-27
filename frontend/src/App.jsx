@@ -32,7 +32,7 @@ const NotFound = () => (
 const AppShell = () => {
   const { user } = useAuth();
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth <= 768);
   const [severity, setSeverity]                 = useState('All');
   const [sensitivity, setSensitivity]           = useState(50);
   const [selectedAnomaly, setSelectedAnomaly]   = useState(null);
@@ -45,6 +45,7 @@ const AppShell = () => {
   });
 
   const toggleSidebar = () => setSidebarCollapsed((c) => !c);
+  const closeSidebar = () => setSidebarCollapsed(true);
 
   const handleWeightChange = (key, val) => {
     const newVal    = Math.min(100, Math.max(0, Number(val)));
@@ -86,6 +87,7 @@ const AppShell = () => {
           onSeverityChange={setSeverity}
           onSensitivityChange={setSensitivity}
           onWeightChange={handleWeightChange}
+          onCloseSidebar={closeSidebar}
         />
 
         <main className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>

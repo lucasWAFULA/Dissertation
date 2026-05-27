@@ -699,3 +699,47 @@ a:hover { color: var(--accent-hover); }
   border-color: rgba(239, 68, 68, 0.4) !important;
   box-shadow: var(--shadow-card), 0 0 16px rgba(239, 68, 68, 0.18) !important;
 }
+
+/* ── Additional Mobile UX Overrides ── */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .filter-row {
+    padding: 12px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .kpi-card {
+    padding: 16px;
+  }
+
+  .chart-container {
+    padding: 12px;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .table-header .form-control {
+    width: 100% !important;
+  }
+}
