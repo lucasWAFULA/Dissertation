@@ -138,6 +138,10 @@ export default function App() {
         <Route path="/"      element={<Landing />} />
         <Route path="/login" element={<Login   />} />
 
+        {/* Redirect bare paths to protected /app/ versions */}
+        <Route path="/forensic" element={<Navigate to="/app/forensic" replace />} />
+        <Route path="/explainability" element={<Navigate to="/app/explainability" replace />} />
+
         {/* Protected — app shell + nested routes */}
         <Route
           path="/app/*"
